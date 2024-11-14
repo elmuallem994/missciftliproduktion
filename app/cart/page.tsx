@@ -50,21 +50,18 @@ const CartPage = () => {
     useCartStore.persist.rehydrate();
   }, []);
 
-  const calculateDeliveryDates = (days: number[]) => {
+  const calculateDeliveryDates = (days: number[]): Date[] => {
     const today = new Date();
     const todayDay = getDay(today);
 
     const dates = days.map((day) => {
-      if (day < 0 || day > 6) {
-        console.error("Invalid day:", day);
-        return null; // تجاهل الأيام غير الصالحة
-      }
       const dayDifference = (day + 7 - todayDay) % 7;
-      return addDays(today, dayDifference === 0 ? 0 : dayDifference);
+      const date = addDays(today, dayDifference === 0 ? 7 : dayDifference);
+      console.log("Calculated date for day", day, "is:", date); // تسجيل التاريخ المحسوب
+      return isNaN(date.getTime()) ? null : date;
     });
 
-    // استبعاد القيم null
-    return dates.filter(Boolean);
+    return dates.filter(Boolean) as Date[]; // التأكد من أن القيم الصالحة فقط هي ما يتم إرجاعه
   };
 
   const handleCheckout = async () => {
@@ -73,6 +70,7 @@ const CartPage = () => {
     } else {
       try {
         setLoading(true);
+        console.log("Selected day before checkout:", selectedDay); // تسجيل اليوم المحدد
 
         if (!selectedDay || !recipientName || !recipientPhone) {
           setErrorMessage("Lütfen tüm zorunlu alanları doldurun.");
@@ -232,6 +230,7 @@ const CartPage = () => {
       }
 
       const data = await response.json();
+      console.log("Days from database:", data.deliveryDays); // تسجيل الأيام المستلمة
       setDeliveryDays(data.deliveryDays);
 
       console.log(deliveryDays);
@@ -248,6 +247,7 @@ const CartPage = () => {
       setDeliveryDates(sortedDates);
     } catch (error) {
       if (error instanceof Error) {
+        console.error("Error fetching delivery days:", error);
         setError(error.message || "Teslimat günleri alınırken bir hata oluştu");
       } else {
         setError("Teslimat günleri alınırken bir hata oluştu");
@@ -437,6 +437,7 @@ const CartPage = () => {
             ) : deliveryDates.length > 0 ? (
               <div>
                 {deliveryDates.map((date, index) => {
+                  console.log("Date before formatting:", date); // تسجيل التاريخ قبل التنسيق
                   const todayDay = getDay(new Date());
                   const isToday = getDay(date) === todayDay;
 
@@ -451,13 +452,11 @@ const CartPage = () => {
                         type="radio"
                         id={`day-${index}`}
                         name="deliveryDay"
-                        value={date.toISOString()}
-                        checked={
-                          selectedDay?.toISOString() === date.toISOString()
-                        }
+                        value={date.getTime()} // تحويل التاريخ إلى رقم
+                        checked={selectedDay?.getTime() === date.getTime()} // مقارنة باستخدام getTime()
                         onChange={() => {
                           if (!isToday) {
-                            setSelectedDay(date);
+                            setSelectedDay(date); // احتفظ بالكائن Date هنا بدون تحويل
                             setError(null);
                           } else {
                             setError(
@@ -467,6 +466,7 @@ const CartPage = () => {
                         }}
                         disabled={isToday}
                       />
+
                       <label
                         htmlFor={`day-${index}`}
                         className="flex items-center gap-2"

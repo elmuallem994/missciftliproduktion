@@ -8,13 +8,13 @@ RUN apk add --no-cache mysql-client
 WORKDIR /app
 
 # نسخ ملفات package.json و package-lock.json من المجلد الجذر
-COPY ../package*.json ./
+COPY package*.json ./
 
 # تثبيت الحزم
 RUN npm install
 
 # نسخ بقية ملفات المشروع
-COPY .. .
+COPY . .
 
 # بناء التطبيق
 RUN npm run build
