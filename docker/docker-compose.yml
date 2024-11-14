@@ -1,0 +1,17 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: mysql://missciftlikuser:bh8JsdHVfe07ZS5B2zTV@46.202.128.26:3306/missciftDatabase
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_live_Y2xlcmsubWlzc2NpZnRsaWsuY29tJA
+      CLERK_SECRET_KEY: sk_live_pbaETjp8KkP3xmII68XagH9CAcxMeQ2rxUEgJBhSS9
+      NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
+      NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
+      NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: /address
+      NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: /address
+      NEXT_PUBLIC_API_BASE_URL: https://www.missciftlik.com

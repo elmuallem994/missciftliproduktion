@@ -1,0 +1,142 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+  
+}
+
+
+model Category {
+  id        String    @id @default(cuid())
+  title     String
+  desc      String
+  img       String
+  slug      String    @unique
+  products  Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id         String   @id @default(cuid())
+  title      String
+  desc       String
+  img        String
+  price      Decimal
+  isFeatured Boolean  @default(false)
+  category   Category @relation(fields: [catSlug], references: [slug])
+  catSlug    String
+  orderItems OrderItem[] // الربط مع OrderItem
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([catSlug])
+  @@index([title]) 
+}
+
+model Order {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id]) // ربط الطلب بالمستخدم
+  price        Decimal
+ 
+  status       String
+  region       Region?   @relation(fields: [regionId], references: [id])
+  regionId     Int?
+  deliveryDate String?
+  address      Address?  @relation(fields: [addressId], references: [id])
+  addressId    Int?
+  orderItems   OrderItem[] // الربط مع OrderItem
+  recipientInfo  String?    // حقل يحتوي على اسم ورقم المستلم بشكل نصي
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([deliveryDate])  // فهرس لتسريع الاستعلامات حسب تاريخ التوصيل
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product?  @relation(fields: [productId], references: [id])
+  title     String   // حفظ عنوان المنتج
+  desc      String  // حفظ وصف المنتج
+  img       String?  // حفظ صورة المنتج (اختياري)
+  price     Decimal  // حفظ سعر المنتج
+  startTime String?        // حفظ نسخة من وقت البدء كـ 
+  endTime   String?        // حفظ نسخة من وقت الانتهاء كـ 
+  address    String?  // حفظ نسخة من العنوان
+  regionName String?  // حفظ نسخة من اسم المنطقة
+  neighborhoods String? // حفظ نسخة من الحي (إذا كانت موجودة)
+  quantity  Int
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+
+model Address {
+  id         Int      @id @default(autoincrement())
+  il         String   // City 
+  adres      String   // Full address
+  region     Region   @relation(fields: [regionId], references: [id]) // ربط العنوان بالمنطقة
+  regionId   Int
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders     Order[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  isRegionAvailable Boolean? @default(true) // إضافة هذا الحقل للإشارة إلى توفر المنطقة
+
+  @@index([regionId])
+  @@index([userId])
+}
+
+
+
+
+model User {
+  id         String    @id @default(cuid())
+  name       String
+  phoneNumber String
+  email      String   @unique
+  orders     Order[]
+  addresses  Address[] // ربط المستخدم بالعناوين
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}  
+
+model Region {
+  id          Int       @id @default(autoincrement())
+  name        String 
+  deliveryDays Json     // لتخزين الأيام كمصفوفة
+  neighborhoods String // 
+  startTime   String    // وقت بدء التوصيل
+  endTime     String    // وقت نهاية التوصيل
+  orders      Order[]
+  addresses   Address[] 
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+    @@unique([name, neighborhoods])
+}
+
