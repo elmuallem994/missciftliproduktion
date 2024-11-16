@@ -1,69 +1,81 @@
 "use client";
 
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
 
+import { MenuType } from "../types/types";
+
+// دالة لجلب البيانات من الـ API
+const getData = async (): Promise<MenuType> => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/categories`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch categories");
+  }
+
+  return res.json();
+};
+
 const Categories = () => {
-  const categories = [
-    { id: 1, title: "Eggs", image: "/categ1.jpg" },
-    { id: 2, title: "Milk", image: "/categ2.jpg" },
-    { id: 3, title: "Olive Oil", image: "/categ3.jpg" },
-    { id: 4, title: "Olive ", image: "/categ4.jpg" },
-    { id: 5, title: "Olive ", image: "/categ5.jpg" },
-  ];
+  const [categories, setCategories] = useState<MenuType>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await getData();
+        setCategories(data);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   return (
     <div className="min-h-screen container mx-auto flex flex-col justify-center items-center px-4">
+      {/* العنوان */}
       <div className="text-center pt-14 mt-1 pb-16">
-        <h1 className="glowing-text text-4xl md:text-5xl lg:text-6xl text-white font-bold">
+        <h1
+          className="glowing-text text-4xl md:text-5xl lg:text-6xl text-white"
+          style={{ fontFamily: "AardvarkCafe, sans-serif" }}
+        >
           Günlük Taze
         </h1>
         <p className="mt-10 text-base md:text-lg lg:text-xl text-gray-100 max-w-2xl mx-auto">
-          Türkiye nin bereketli topraklarından doğanın sunduğu en taze ve doğal
+          Türkiyenin bereketli topraklarından doğanın sunduğu en taze ve doğal
           ürünleri sizler için özenle topladık. Çiftlikten sofranıza ulaşan bu
-          ürünlerle, lezzet ve sağlık dolu bir yaşam sunuyoruz. Doğal
+          ürünlerle، lezzet ve sağlık dolu bir yaşam sunuyoruz. Doğal
           lezzetlerin tadını çıkarın ve sağlıklı bir yaşam için güvenle tercih
-          edin
+          edin.
         </p>
       </div>
 
-      <Carousel
-        opts={{ align: "center" }}
-        className="w-full max-w-4xl space-y-4"
-      >
-        <CarouselContent>
-          {categories.map((category) => (
-            <CarouselItem
-              key={category.id}
-              className="flex basis-[90%] sm:basis-[45%] md:basis-[30%] px-2"
-            >
-              <div className="transition-transform duration-300 transform hover:scale-105">
-                <Card className="rounded-lg shadow-lg overflow-hidden">
-                  <CardContent className=" flex items-center justify-center p-0 aspect-square">
-                    <Image
-                      src={category.image}
-                      alt={category.title}
-                      width={400}
-                      height={300}
-                      className="w-full h-full object-cover" // استخدم object-cover لملء البطاقة بالكامل
-                    />
-                  </CardContent>
-                </Card>
+      {/* عرض الصور */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6 md:gap-14 w-full max-w-4xl md:max-w-5xl">
+        {categories.map((category) => (
+          <Link href={`/menu/${category.slug}`} key={category.id} passHref>
+            <div className="group relative flex flex-col items-center transition-transform duration-300 transform hover:scale-105">
+              <div className="relative w-full h-44 md:h-72">
+                {" "}
+                {/* تم زيادة الحجم هنا */}
+                <Image
+                  src={category.img}
+                  alt={category.title}
+                  fill
+                  className="object-cover rounded-md" // استخدم object-cover لملء الحاوية بالكامل
+                />
               </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-
-        <CarouselPrevious className="text-gray-600 hover:text-gray-800" />
-        <CarouselNext className="text-gray-600 hover:text-gray-800" />
-      </Carousel>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 };

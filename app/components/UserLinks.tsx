@@ -1,7 +1,7 @@
 "use client";
 
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
-import { ReceiptText, User } from "lucide-react";
+import { ReceiptText } from "lucide-react";
 import Link from "next/link";
 
 const UserLinks = ({ onClick }: { onClick?: () => void }) => {
@@ -29,12 +29,12 @@ const UserLinks = ({ onClick }: { onClick?: () => void }) => {
       <SignedOut>
         {/* زر تسجيل الدخول مع نافذة منبثقة */}
         <SignInButton mode="modal">
-          <span style={{ cursor: "pointer" }} onClick={onClick}>
-            <User
-              className="text-white bg-orange-400 rounded-full p-2"
-              size={35}
-            />{" "}
-            {/* استخدام الأيقونة */}
+          <span
+            style={{ cursor: "pointer" }}
+            onClick={onClick}
+            className="text-white bg-orange-400 rounded-full py-1 px-3"
+          >
+            giriş yap
           </span>
         </SignInButton>
       </SignedOut>

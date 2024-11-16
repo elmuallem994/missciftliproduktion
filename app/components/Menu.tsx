@@ -35,8 +35,8 @@ const Menu = () => {
       >
         <div className="flex flex-col items-center gap-2">
           <SheetHeader>
-            <SheetTitle className="text-center text-2xl tracking-wide leading-tight">
-              القائمة
+            <SheetTitle className="text-center text-orange-300 text-3xl tracking-wide leading-tight font-extrabold">
+              Menü
             </SheetTitle>
           </SheetHeader>
           <Separator />

@@ -70,11 +70,14 @@ const MenuPage = () => {
 
   return (
     <div className="min-h-screen w-full text-orange-500 pt-40">
-      <h1 className="glowing-text text-center text-6xl text-white font-extralight mb-12">
+      <h1
+        className="glowing-text text-center text-6xl text-white  mb-12"
+        style={{ fontFamily: "AardvarkCafe, sans-serif" }}
+      >
         Çeşitler
       </h1>
       <div className="w-full flex justify-center items-center py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 w-[60%] lg:w-[55%]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 w-[90%]  md:w-[45%]">
           {menu.map((category) => (
             <div
               key={category.id}
@@ -89,7 +92,7 @@ const MenuPage = () => {
                   src={category.img}
                   alt={category.title}
                   fill
-                  className="object-cover rounded-md"
+                  className="object-contain rounded-md"
                 />
               </div>
               <div className="flex flex-col items-center justify-center text-center mt-4 px-2">
@@ -99,10 +102,10 @@ const MenuPage = () => {
                 <p className="my-2 md:my-4 text-sm md:text-lg text-gray-300">
                   {category.desc}
                 </p>
-                <button className="bg-orange-500 text-white py-1 px-3 md:py-2 md:px-4 rounded-md hover:bg-orange-600 transition-all">
-                  Keşfet
-                </button>
               </div>
+              <button className="w-full bg-orange-500 text-white py-1 px-3 md:py-2 md:px-4 rounded-md hover:bg-orange-600 transition-all">
+                Keşfet
+              </button>
               {isAdmin && (
                 <div className="absolute top-4 right-4 z-20 flex gap-2">
                   <button

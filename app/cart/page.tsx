@@ -56,7 +56,7 @@ const CartPage = () => {
 
     const dates = days.map((day) => {
       const dayDifference = (day + 7 - todayDay) % 7;
-      const date = addDays(today, dayDifference === 0 ? 7 : dayDifference);
+      const date = addDays(today, dayDifference === 0 ? 0 : dayDifference); // 0 بدلاً من 7 لكي يحسب اليوم الحالي
       console.log("Calculated date for day", day, "is:", date); // تسجيل التاريخ المحسوب
       return isNaN(date.getTime()) ? null : date;
     });
@@ -350,7 +350,7 @@ const CartPage = () => {
             </button>
           </AlertDialogTrigger>
 
-          <AlertDialogContent>
+          <AlertDialogContent className="w-full max-w-[400px] md:max-w-[600px] transform scale-90 sm:scale-100 overflow-y-auto max-h-[80vh]">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-orange-300 font-bold text-3xl pb-7">
                 {" "}
@@ -437,9 +437,11 @@ const CartPage = () => {
             ) : deliveryDates.length > 0 ? (
               <div>
                 {deliveryDates.map((date, index) => {
-                  console.log("Date before formatting:", date); // تسجيل التاريخ قبل التنسيق
-                  const todayDay = getDay(new Date());
-                  const isToday = getDay(date) === todayDay;
+                  const today = new Date(); // تعريف متغير today لتاريخ اليوم الحالي
+                  const isToday =
+                    date.getDate() === today.getDate() &&
+                    date.getMonth() === today.getMonth() &&
+                    date.getFullYear() === today.getFullYear();
 
                   return (
                     <div
@@ -452,11 +454,11 @@ const CartPage = () => {
                         type="radio"
                         id={`day-${index}`}
                         name="deliveryDay"
-                        value={date.getTime()} // تحويل التاريخ إلى رقم
-                        checked={selectedDay?.getTime() === date.getTime()} // مقارنة باستخدام getTime()
+                        value={date.getTime()}
+                        checked={selectedDay?.getTime() === date.getTime()}
                         onChange={() => {
                           if (!isToday) {
-                            setSelectedDay(date); // احتفظ بالكائن Date هنا بدون تحويل
+                            setSelectedDay(date);
                             setError(null);
                           } else {
                             setError(
@@ -466,7 +468,6 @@ const CartPage = () => {
                         }}
                         disabled={isToday}
                       />
-
                       <label
                         htmlFor={`day-${index}`}
                         className="flex items-center gap-2"

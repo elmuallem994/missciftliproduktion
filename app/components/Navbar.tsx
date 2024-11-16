@@ -14,7 +14,13 @@ const Navbar = () => {
     <div className="absolute top-20 md:top-16 left-0 w-full z-10 bg-transparent h-16 md:h-20 md:px-4  flex items-center justify-between md:justify-center md:gap-14">
       {/* Logo */}
       <Link href="/">
-        <Image src="/logo.png" alt="Logo" width={120} height={60} />
+        <Image
+          src="/logo.png"
+          alt="Logo"
+          width={120}
+          height={60}
+          className="logo-animations"
+        />
       </Link>
 
       {/* Center Links */}

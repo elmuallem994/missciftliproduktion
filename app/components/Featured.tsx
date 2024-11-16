@@ -5,52 +5,55 @@ import { FaStar } from "react-icons/fa";
 const featuredProducts = [
   {
     id: 1,
-    title: "Manda Sütü",
-    desc: "çiğ manda sütü",
-    price: "100",
-    img: "/cat1.png",
+    title: "İnek sütü",
+    desc: "3 LT. Çiğ inek sütü Karışık 50% Jersey ve Simental",
+    price: "115",
+    img: "/cat33.png",
   },
   {
     id: 2,
-    title: "Taze Yumurta",
-    desc: "organik yumurta",
+    title: "gezen tavuk yumurtası ",
+    desc: "15 adet serbest gezen tavuk yumurtası ",
     price: "80",
-    img: "/cat2.png",
+    img: "/cat22.png",
   },
   {
     id: 3,
-    title: "Zeytinyağı ",
-    desc: "Hatay'dan soğuk sıkım zeytinyağı ",
-    price: "70",
-    img: "/cat3.png",
+    title: " İnek yoğurdu  ",
+    desc: " 1 kg. Ev tipi inek yoğurdu ",
+    price: "55",
+    img: "/cat35.png",
   },
   {
     id: 4,
-    title: "Domates Sosu",
-    desc: "Hatay biber salçası Güneş kurutma",
-    price: "120",
-    img: "/cat4.png",
+    title: "Acı Biber salçası ",
+    desc: "1 kg. Hatay biber salçası Güneş kurutma",
+    price: "150",
+    img: "/cat49.png",
   },
   {
     id: 5,
-    title: "Beyaz Peynir",
-    desc: "çiğ beyaz peynir",
-    price: "90",
-    img: "/cat11.png",
+    title: "manda sütü",
+    desc: "1 kg. çiğ manda sütü ",
+    price: "100",
+    img: "/cat145.png",
   },
   {
     id: 6,
-    title: "Taze Yoğurt",
-    desc: "ev yapımı yoğurt",
-    price: "75",
-    img: "/cat9.png",
+    title: "Zeytinyağı",
+    desc: "1 litre Hatay'dan soğuk sıkım zeytinyağı ",
+    price: "350",
+    img: "/cat5.png",
   },
 ];
 
 const Featured = () => {
   return (
     <div className="w-full text-orange-500 my-36">
-      <h1 className="glowing-text text-center text-5xl md:text-6xl lg:text-7xl text-white font-bold pb-11">
+      <h1
+        className="glowing-text text-center text-4xl md:text-5xl lg:text-6xl text-white  pb-20"
+        style={{ fontFamily: "AardvarkCafe, sans-serif" }}
+      >
         Ürünler
       </h1>
       <div className="w-full flex justify-center items-center py-4">
