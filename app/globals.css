@@ -25,10 +25,6 @@ body {
   font-style: normal;
 }
 
-.specific-section {
-  overflow-x: hidden;
-}
-
 .main-content {
   margin-top: 10rem; /* عدل الرقم بناءً على ارتفاع النافبار */
 }
