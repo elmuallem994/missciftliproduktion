@@ -113,7 +113,7 @@ const Slider = () => {
 
       {/* صورة أمواج الحليب مع تأثير ارتفاع وانخفاض */}
       <motion.div
-        className="absolute bottom-[-2px] md:bottom-[-10px] left-0 w-full z-20"
+        className="absolute bottom-[-10px] md:bottom-[-10px] left-0 w-full z-20"
         animate={{
           y: [0, -10, 0], // حركة العمودية للأعلى ثم الأسفل
         }}

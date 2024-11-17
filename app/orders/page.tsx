@@ -88,7 +88,7 @@ const OrdersPage = () => {
   return (
     <div className="flex justify-center items-center min-h-screen">
       <div className="p-4 lg:px-20 xl:px-40 main-content text-white min-h-screen w-full ">
-        <h1 className="glowing-text text-center text-3xl sm:text-4xl font-bold mb-6 sm:mb-12">
+        <h1 className="glowing-text text-center text-3xl sm:text-4xl font-bold mb-12">
           Siparişlerim
         </h1>
 
@@ -99,7 +99,7 @@ const OrdersPage = () => {
             placeholder="Sipariş numarasına göre ara"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full sm:w-1/2 md:w-1/3 p-2 border border-gray-300 rounded-md text-black"
+            className="w-full h-9 sm:w-1/2 md:w-1/3 p-2 border border-gray-300 rounded-md text-black"
           />
         </div>
 
@@ -182,7 +182,7 @@ const OrdersPage = () => {
                           </AlertDialogTrigger>
 
                           {selectedOrder && selectedOrder.id === order.id && (
-                            <AlertDialogContent className="bg-white rounded-lg shadow-2xl p-6 w-full mx-auto max-h-[80vh] overflow-y-auto">
+                            <AlertDialogContent className="min-h-[50vh] bg-white rounded-lg shadow-2xl p-6 w-full mx-auto max-h-[80vh] overflow-y-auto">
                               <AlertDialogHeader>
                                 <AlertDialogTitle className="text-2xl font-semibold text-orange-400 mb-2">
                                   Sipariş Detayları
@@ -383,7 +383,7 @@ const OrdersPage = () => {
           </div>
         ) : (
           // عرض البطاقات إذا كان المستخدم عميلًا
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 p-4 rounded-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-4 rounded-lg">
             {currentOrders.map((order: OrderType) => (
               <div
                 key={order.id}

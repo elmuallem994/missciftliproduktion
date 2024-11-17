@@ -41,9 +41,14 @@ type Region = {
 
 // Zod schema for form validation
 const addressSchema = z.object({
-  il: z.string().min(1, { message: "Il (City) is required" }),
-  adres: z.string().min(1, { message: "Adres (Full Address) is required" }),
-  regionId: z.number().min(1, { message: "Region is required" }),
+  il: z.string().min(1, { message: "Lütfen şehir adını giriniz." }),
+  adres: z.string().min(1, { message: "Lütfen tam adresi giriniz." }),
+  regionId: z.number().min(1, { message: "Lütfen bölgeyi seçiniz." }),
+  bina: z
+    .string()
+    .min(1, { message: "Lütfen bina adını veya numarasını giriniz." }),
+  kat: z.string().min(1, { message: "Lütfen kat numarasını giriniz." }),
+  daire: z.string().min(1, { message: "Lütfen daire numarasını giriniz." }),
 });
 
 type AddressFormValues = z.infer<typeof addressSchema>;
@@ -60,9 +65,12 @@ const AddressPage: React.FC = () => {
   const form = useForm<AddressFormValues>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
-      il: address?.il || "Istanbul", // تأكد من تعيين القيمة الافتراضية "Istanbul"
+      il: address?.il || "Istanbul",
       adres: address?.adres || "",
       regionId: address?.regionId || undefined,
+      bina: address?.bina || "", // القيمة الافتراضية لحقل Bina
+      kat: address?.kat || "", // القيمة الافتراضية لحقل Kat
+      daire: address?.daire || "", // القيمة الافتراضية لحقل Daire
     },
   });
 
@@ -94,8 +102,29 @@ const AddressPage: React.FC = () => {
         if (res.ok) {
           const data: AddressFormValues[] = await res.json();
           if (data.length > 0) {
-            setAddress(data[0]);
-            form.reset(data[0]);
+            // استخراج القيم من النصوص
+            const fullAddress = data[0].adres;
+            const match = fullAddress.match(
+              /Bina: (.*?), Kat: (.*?), Daire: (.*?), (.*)/
+            );
+            if (match) {
+              setAddress({
+                il: data[0].il,
+                regionId: data[0].regionId,
+                bina: match[1]?.trim() || "", // وضع القيمة في الحقل الخاص بها
+                kat: match[2]?.trim() || "",
+                daire: match[3]?.trim() || "",
+                adres: match[4]?.trim() || "",
+              });
+              form.reset({
+                il: data[0].il,
+                regionId: data[0].regionId,
+                bina: match[1]?.trim() || "",
+                kat: match[2]?.trim() || "",
+                daire: match[3]?.trim() || "",
+                adres: match[4]?.trim() || "",
+              });
+            }
           } else {
             setIsEditModalOpen(true);
           }
@@ -150,6 +179,7 @@ const AddressPage: React.FC = () => {
       router.push("/sign-in");
     } else {
       try {
+        data.adres = data.adres.trim().replace(/,+/g, ","); // تنظيف النص قبل الإرسال
         setLoading(true);
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/address`,
@@ -178,57 +208,83 @@ const AddressPage: React.FC = () => {
 
   // Determine the correct submit handler based on whether an address exists
   const onSubmit = (data: AddressFormValues) => {
+    // دمج القيم مع النصوص التوضيحية
+    const fullAddress = `Bina: ${data.bina || ""}, Kat: ${
+      data.kat || ""
+    }, Daire: ${data.daire || ""}, ${data.adres || ""}`
+      .trim()
+      .replace(/,+/g, ",");
+
+    const updatedData = {
+      ...data,
+      bina: data.bina,
+      kat: data.kat,
+      daire: data.daire,
+      adres: fullAddress, // تحديث حقل Tam Adres (Full) مع النصوص
+    };
+
     if (address) {
-      updateAddress(data);
+      updateAddress(updatedData); // التحديث إذا كان العنوان موجودًا مسبقًا
     } else {
-      createAddress(data);
+      createAddress(updatedData); // الإضافة إذا كان العنوان جديدًا
     }
   };
 
   return (
-    <div className="p-4 main-content ">
+    <div className="p-3 md:p-16 main-content ">
       <div className="flex flex-col justify-center items-center gap-3 ">
-        <h2 className=" text-4xl text-orange-500 font-bold tracking-tight ">
+        <h2
+          className="glowing-text text-4xl md:text-5xl lg:text-6xl text-white pb-5"
+          style={{ fontFamily: "AardvarkCafe, sans-serif" }}
+        >
           Teslimat adresi
         </h2>
-        <p className="text-base text-muted-foreground text-orange-400">
+        <p className="text-base text-muted-foreground text-white text-center">
           Burada teslimat adresinizi ekleyebilir ve değiştirebilirsiniz
         </p>
       </div>
 
       {address && (
         <div className="flex justify-center items-center pt-10">
-          <div className=" p-8 rounded-3xl shadow-lg bg-orange-50 max-w-3xl w-full mx-auto">
+          <div className="p-6 max-w-3xl w-full mx-auto bg-gradient-to-br from-white to-gray-100 rounded-xl shadow-xl border border-gray-200">
             {/* Başlık */}
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center justify-between mb-8">
               <div className="flex items-center">
-                <MapPin className="w-6 h-6 text-orange-500 mr-2 " />
-                <h3 className="text-3xl font-semibold text-gray-500">
+                <div className="bg-orange-100 p-3 rounded-full shadow-md">
+                  <MapPin className="w-6 h-6 text-orange-600" />
+                </div>
+                <h3 className="text-3xl font-extrabold text-green-400 ml-4">
                   Adresim
                 </h3>
               </div>
-              <div className="flex justify-end w-full ">
+              <div>
                 <Button
-                  className="px-4 py-2  bg-orange-500 text-white rounded-full shadow-md hover:bg-orange-600 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full shadow-md hover:shadow-lg transition-all"
                   onClick={() => setIsEditModalOpen(true)}
                   disabled={isLoading}
                 >
-                  <Pencil className="w-5 h-5 mr-2" />
+                  <Pencil className="w-5 h-5" />
                   <span className="text-sm font-medium">Düzenle</span>
                 </Button>
               </div>
             </div>
 
             {/* Adres Detayları */}
-            <div className="space-y-4 text-gray-700">
-              <div className="flex flex-col items-start ">
-                <strong className="text-orange-400 pb-1">Şehir:</strong>
-                <p>{address.il}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-orange-300">
+                  Şehir:
+                </span>
+                <p className="text-lg font-semibold text-gray-700">
+                  {address.il}
+                </p>
               </div>
 
-              <div className="flex flex-col items-start">
-                <strong className="text-orange-400 pb-1">Mahalle:</strong>
-                <p>
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-orange-300">
+                  Mahalle:
+                </span>
+                <p className="text-lg font-semibold text-gray-700">
                   {regions.find((region) => region.id === address.regionId)
                     ? `${
                         regions.find((region) => region.id === address.regionId)
@@ -241,9 +297,13 @@ const AddressPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex flex-col items-start">
-                <strong className="text-orange-400 pb-1 ">Tam Adres:</strong>
-                <p className="max-w-sm w-full ">{address.adres}</p>
+              <div className="col-span-2 flex flex-col">
+                <span className="text-2xl font-bold text-orange-300">
+                  Tam Adres:
+                </span>
+                <p className="text-lg font-semibold text-gray-700">
+                  {address.adres}
+                </p>
               </div>
             </div>
           </div>
@@ -252,7 +312,7 @@ const AddressPage: React.FC = () => {
 
       {/* Düzenleme Dialogu */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="bg-white shadow-xl rounded-2xl p-8 max-w-lg mx-auto">
+        <DialogContent className="min-h-[50vh] bg-white shadow-xl rounded-2xl p-4 sm:p-8 w-full max-w-md sm:max-w-lg mx-auto overflow-y-auto max-h-screen">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-gray-800">
               {address ? "Adresi Düzenle" : "Yeni Adres Ekle"}
@@ -323,16 +383,94 @@ const AddressPage: React.FC = () => {
               <FormField
                 control={form.control}
                 name="adres"
-                render={({ field }) => (
+                render={() => (
                   <FormItem>
-                    <FormLabel className="text-orange-400">Tam Adres</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoading}
-                        placeholder="Tam Adres"
-                        {...field}
-                      />
-                    </FormControl>
+                    {/* تقسيم الحقول */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* حقل Bina */}
+                      <FormItem>
+                        <FormLabel className="text-orange-400">Bina</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Bina"
+                            value={form.getValues("bina") || ""}
+                            onChange={(e) => {
+                              form.setValue("bina", e.target.value, {
+                                shouldValidate: true,
+                              });
+                            }}
+                            className="border border-gray-300 rounded-lg p-2"
+                            required
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+
+                      {/* حقل Kat */}
+                      <FormItem>
+                        <FormLabel className="text-orange-400">Kat</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Kat"
+                            value={form.getValues("kat") || ""}
+                            onChange={(e) => {
+                              form.setValue("kat", e.target.value, {
+                                shouldValidate: true,
+                              });
+                            }}
+                            className="border border-gray-300 rounded-lg p-2"
+                            required
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+
+                      {/* حقل Daire */}
+                      <FormItem>
+                        <FormLabel className="text-orange-400">Daire</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Daire"
+                            value={form.getValues("daire") || ""}
+                            onChange={(e) => {
+                              form.setValue("daire", e.target.value, {
+                                shouldValidate: true,
+                              });
+                            }}
+                            className="border border-gray-300 rounded-lg p-2"
+                            required
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    </div>
+
+                    {/* الحقل الطويل لعنوان النص الكامل */}
+                    <FormItem>
+                      <FormLabel className="text-orange-400">
+                        Tam Adres
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Tam Adres"
+                          value={form.getValues("adres")} // يعرض القيمة الحالية
+                          onChange={(e) => {
+                            const fullAddress = e.target.value;
+                            form.setValue(
+                              "adres",
+                              fullAddress.trim().replace(/,+/g, ","),
+                              {
+                                shouldValidate: true,
+                              }
+                            );
+                          }}
+                          className="border border-gray-300 rounded-lg p-2 w-full"
+                          required
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+
                     <FormMessage />
                   </FormItem>
                 )}

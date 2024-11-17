@@ -39,7 +39,7 @@ const Categories = () => {
   }, []);
 
   return (
-    <div className="min-h-screen container mx-auto flex flex-col justify-center items-center px-4">
+    <div className=" mx-auto flex flex-col justify-center items-center px-4">
       {/* العنوان */}
       <div className="text-center pt-14 mt-1 pb-16">
         <h1

@@ -117,7 +117,9 @@ const OrderDetails = ({ params }: { params: { orderId: string } }) => {
         </p>
 
         <p className="text-gray-500 font-semibold mb-2">
-          <strong className="text-orange-500 text-lg  ">Teslim Tarihi:</strong>
+          <strong className="text-orange-500 text-lg  ">
+            Teslimat Tarihi:
+          </strong>
           <span className="ml-2">
             {orderDetails.deliveryDate
               ? new Date(orderDetails.deliveryDate).toLocaleDateString(

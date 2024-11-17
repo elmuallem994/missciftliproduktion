@@ -9,7 +9,7 @@ import VideoSection from "./components/VideoSection";
 
 export default function Home() {
   return (
-    <main className="specific-section">
+    <main className="specific-section overflow-auto">
       <Slider />
       <VideoSection />
       <Categories />

@@ -19,24 +19,23 @@ const Offer = () => {
         </div>
       </div>
 
-      {/* القسم السفلي: صور الطريق والسيارات في نفس الصف */}
-      <div className="w-full max-w-[400px] md:max-w-[1500px] mx-auto flex flex-row gap-4 mt-6">
-        {/* صورة الطريق */}
-        <div className="w-full md:w-1/2 overflow-hidden rounded-3xl">
-          <Image
-            src="/kap2.png" // تأكد من المسار الصحيح لصورة الطريق
-            alt="Delivery Road"
-            width={500} // عرض الصورة الطبيعي
-            height={500} // ارتفاع الصورة الطبيعي
-            className="w-full h-auto object-contain" // لجعل الصورة تتناسب مع الحاوية
-          />
+      {/* القسم السفلي: النص والسيارات */}
+      <div className="w-full max-w-[1000px] mx-auto flex flex-col md:flex-row items-center mt-16  sm:mt-6">
+        {/* النص */}
+        <div className="text-center md:text-left md:w-1/2">
+          <h2 className="text-xl md:text-3xl font-bold text-orange-400">
+            Hızlı ve Güvenilir Teslimat
+          </h2>
+          <p className="text-sm md:text-base text-gray-300 mt-2">
+            Teslimat araçlarımızla siparişlerinizi kapınıza kadar getiriyoruz.
+          </p>
         </div>
 
         {/* صورة السيارات */}
-        <div className="w-full md:w-1/2 flex items-center justify-center">
+        <div className="w-[85%] md:w-1/2 flex items-center justify-center">
           <div className="w-full h-auto md:h-auto md:scale-100 scale-110 p-2">
             <Image
-              src="/Car.png" // تأكد من المسار الصحيح لصورة السيارة
+              src="/car.webp" // تأكد من المسار الصحيح لصورة السيارة
               alt="Delivery Cars"
               width={800} // عرض الصورة الطبيعي
               height={800} // ارتفاع الصورة الطبيعي
