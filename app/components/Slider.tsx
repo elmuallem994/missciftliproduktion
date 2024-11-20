@@ -22,7 +22,7 @@ const textAnimation = {
 
 const Slider = () => {
   const [activeSlide, setActiveSlide] = useState(0);
-  const companyName = "MISS ÇİFTLİK";
+  const companyName = "MİSS ÇİFTLİK";
   const welcomeText = "Hoş Geldiniz";
 
   return (
