@@ -7,42 +7,36 @@ const featuredProducts = [
     id: 1,
     title: "İnek sütü",
     desc: "3 LT. Çiğ inek sütü Karışık 50% Jersey ve Simental",
-    price: "115",
     img: "/cat33.png",
   },
   {
     id: 2,
     title: "gezen tavuk yumurtası ",
     desc: "15 adet serbest gezen tavuk yumurtası ",
-    price: "80",
     img: "/cat22.png",
   },
   {
     id: 3,
     title: " İnek yoğurdu  ",
     desc: " 1 kg. Ev tipi inek yoğurdu ",
-    price: "55",
     img: "/cat35.png",
   },
   {
     id: 4,
     title: "Acı Biber salçası ",
     desc: "1 kg. Hatay biber salçası Güneş kurutma",
-    price: "150",
     img: "/cat49.png",
   },
   {
     id: 5,
     title: "manda sütü",
     desc: "1 kg. çiğ manda sütü ",
-    price: "100",
     img: "/cat145.png",
   },
   {
     id: 6,
     title: "Zeytinyağı",
     desc: "1 litre Hatay'dan soğuk sıkım zeytinyağı ",
-    price: "350",
     img: "/cat5.png",
   },
 ];
@@ -85,9 +79,6 @@ const Featured = () => {
                       <FaStar key={i} />
                     ))}
                 </div>
-                <span className="text-lg md:text-xl lg:text-2xl text-white font-bold">
-                  {item.price} TL
-                </span>
               </div>
             </div>
           ))}

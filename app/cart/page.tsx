@@ -14,7 +14,7 @@ import {
   AlertDialogDescription,
   AlertDialogCancel,
 } from "@/app/components/ui/alert-dialog";
-import { format, addDays, compareAsc, getDay } from "date-fns";
+import { format, addDays, getDay } from "date-fns";
 import { tr } from "date-fns/locale";
 import LoadingSpinner from "@/app/components/ui/loadingSpinner";
 import { Pencil } from "lucide-react";
@@ -22,6 +22,7 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { Button } from "../components/ui/button";
 import { FaTrash } from "react-icons/fa";
+import { sendOrderToWhatsApp } from "@/utils/sendToWhatsApp";
 
 const CartPage = () => {
   const [recipientName, setRecipientName] = useState<string>("");
@@ -50,18 +51,32 @@ const CartPage = () => {
     useCartStore.persist.rehydrate();
   }, []);
 
+  // دالة لحساب نفس اليوم من الأسبوع القادم
+  const getNextWeekSameDay = (dayNumber: number): Date => {
+    const today = new Date();
+    const todayDay = getDay(today);
+    const dayDifference = (dayNumber + 7 - todayDay) % 7;
+    return addDays(today, dayDifference + 7); // نضيف 7 للحصول على نفس اليوم الأسبوع القادم
+  };
+
   const calculateDeliveryDates = (days: number[]): Date[] => {
     const today = new Date();
     const todayDay = getDay(today);
 
-    const dates = days.map((day) => {
+    // حساب التواريخ للأسبوع الحالي بناءً على الأيام المحددة فقط
+    const currentWeekDates = days.map((day) => {
       const dayDifference = (day + 7 - todayDay) % 7;
-      const date = addDays(today, dayDifference === 0 ? 0 : dayDifference); // 0 بدلاً من 7 لكي يحسب اليوم الحالي
-      console.log("Calculated date for day", day, "is:", date); // تسجيل التاريخ المحسوب
-      return isNaN(date.getTime()) ? null : date;
+      return addDays(today, dayDifference);
     });
 
-    return dates.filter(Boolean) as Date[]; // التأكد من أن القيم الصالحة فقط هي ما يتم إرجاعه
+    // إضافة نفس اليوم للأسبوع القادم فقط إذا كان اليوم الحالي موجودًا في لوحة التحكم
+    const nextWeekDates = days.includes(todayDay) ? [addDays(today, 7)] : [];
+
+    // دمج التواريخ الحالية مع تواريخ الأسبوع القادم
+    const allDates = [...currentWeekDates, ...nextWeekDates];
+
+    // ترتيب التواريخ
+    return allDates.sort((a, b) => a.getTime() - b.getTime());
   };
 
   const handleCheckout = async () => {
@@ -142,8 +157,28 @@ const CartPage = () => {
         const responseData = await res.json();
         if (res.ok) {
           const orderId = responseData.orderId;
+
+          // استخراج تاريخ الطلب
+          const orderDate = new Date();
+
+          // إرسال الطلب إلى WhatsApp
+          sendOrderToWhatsApp(
+            products,
+            recipientInfo,
+            totalPrice,
+            selectedDay,
+            regionName,
+            neighborhoods,
+            startTime,
+            endTime,
+            orderDate, // تاريخ الطلب
+            orderId,
+            fullAddress // العنوان الكامل
+          );
+
           useCartStore.getState().clearCart();
           addOrderId(orderId);
+
           return orderId;
         } else {
           console.error("Error occurred during checkout:", responseData);
@@ -230,28 +265,19 @@ const CartPage = () => {
       }
 
       const data = await response.json();
-      console.log("Days from database:", data.deliveryDays); // تسجيل الأيام المستلمة
-      setDeliveryDays(data.deliveryDays);
+
+      const calculatedDates = calculateDeliveryDates(data.deliveryDays);
 
       console.log(deliveryDays);
 
-      setRegionName(`${data.regionName} - ${data.neighborhoods}`);
+      setDeliveryDates(calculatedDates);
+      setDeliveryDays(data.deliveryDays);
+      setRegionName(data.regionName);
       setStartTime(data.startTime);
       setEndTime(data.endTime);
-
-      const calculatedDates = calculateDeliveryDates(data.deliveryDays);
-      const sortedDates = calculatedDates
-        .filter((date) => date !== null)
-        .sort(compareAsc);
-
-      setDeliveryDates(sortedDates);
     } catch (error) {
-      if (error instanceof Error) {
-        console.error("Error fetching delivery days:", error);
-        setError(error.message || "Teslimat günleri alınırken bir hata oluştu");
-      } else {
-        setError("Teslimat günleri alınırken bir hata oluştu");
-      }
+      console.log(error);
+      setError("Teslimat günleri alınırken bir hata oluştu");
     } finally {
       setLoading(false);
     }
@@ -260,7 +286,7 @@ const CartPage = () => {
   return (
     <div className="min-h-screen main-content flex flex-col lg:flex-row text-orange-500 bg-gray-100">
       {message && (
-        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-auto bg-red-500 text-white text-center p-8 z-50 rounded-md shadow-lg">
+        <div className=" fixed top-16 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-auto bg-red-500 text-white text-center p-8 z-50 rounded-md shadow-lg">
           {message}
         </div>
       )}
@@ -343,7 +369,14 @@ const CartPage = () => {
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <button
-              onClick={fetchDeliveryDays}
+              onClick={() => {
+                if (products.length === 0) {
+                  setMessage("Lütfen sipariş vermeden önce ürün ekleyin."); // رسالة الخطأ
+                  setTimeout(() => setMessage(null), 3000); // إخفاء الرسالة بعد 3 ثوانٍ
+                  return;
+                }
+                fetchDeliveryDays(); // استدعاء الدالة إذا كانت السلة تحتوي على منتجات
+              }}
               className="bg-orange-500 text-white py-3 rounded-md w-full text-center font-semibold hover:bg-orange-600 transition duration-300"
             >
               DEVAM ET
@@ -437,11 +470,17 @@ const CartPage = () => {
             ) : deliveryDates.length > 0 ? (
               <div>
                 {deliveryDates.map((date, index) => {
-                  const today = new Date(); // تعريف متغير today لتاريخ اليوم الحالي
+                  const today = new Date();
                   const isToday =
                     date.getDate() === today.getDate() &&
                     date.getMonth() === today.getMonth() &&
                     date.getFullYear() === today.getFullYear();
+
+                  const nextWeekSameDay = getNextWeekSameDay(getDay(today));
+                  const isNextWeek =
+                    date.getDate() === nextWeekSameDay.getDate() &&
+                    date.getMonth() === nextWeekSameDay.getMonth() &&
+                    date.getFullYear() === nextWeekSameDay.getFullYear();
 
                   return (
                     <div
@@ -472,19 +511,15 @@ const CartPage = () => {
                         htmlFor={`day-${index}`}
                         className="flex items-center gap-2"
                       >
+                        {format(date, "EEEE - d MMMM yyyy", { locale: tr })}
                         {isToday && (
-                          <span className="text-xs text-red-600 font-bold">
-                            Bugün
+                          <span className="text-sm text-red-600 font-bold">
+                            Bugün (Kapalı - Aynı gün sipariş verilemez)
                           </span>
                         )}
-                        {`${format(date, "EEEE", { locale: tr })} - ${format(
-                          date,
-                          "d MMMM yyyy",
-                          { locale: tr }
-                        )}`}
-                        {isToday && (
-                          <span className="text-xs text-red-600 whitespace-normal break-words">
-                            Aynı gün rezervasyon yapılması mümkün değildir.
+                        {isNextWeek && (
+                          <span className="text-sm text-green-500 font-bold">
+                            (Açık - Haftaya sipariş verebilirsiniz)
                           </span>
                         )}
                       </label>

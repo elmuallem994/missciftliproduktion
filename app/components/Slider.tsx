@@ -26,7 +26,10 @@ const Slider = () => {
   const welcomeText = "Hoş Geldiniz";
 
   return (
-    <div className="h-screen w-full relative my-swiper-container z-0 ">
+    <div
+      className="h-screen w-full relative my-swiper-container z-0 "
+      style={{ fontFamily: "AardvarkCafe, sans-serif" }}
+    >
       <Swiper
         modules={[Autoplay, Pagination, EffectFade]}
         loop={true}

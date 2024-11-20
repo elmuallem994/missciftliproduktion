@@ -16,7 +16,7 @@ import {
   AlertDialogDescription,
   AlertDialogCancel,
 } from "@/app/components/ui/alert-dialog";
-import { FaEye } from "react-icons/fa";
+import { FaEye, FaWhatsapp } from "react-icons/fa";
 
 const OrdersPage = () => {
   const { user } = useUser();
@@ -149,10 +149,33 @@ const OrdersPage = () => {
                     </td>
 
                     <td className="px-3 py-2 sm:px-6 sm:py-4 text-sm sm:text-base border-b text-center">
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex flex-col items-center gap-2">
+                        {/* عرض الاسم */}
                         <span className="text-gray-700 font-semibold">
-                          {order.recipientInfo}
+                          {order.recipientInfo.split(" ")[0]}{" "}
+                          {/* استخراج الاسم فقط */}
                         </span>
+
+                        {/* عرض رقم الهاتف كزر واتساب */}
+                        <button
+                          onClick={() => {
+                            const phoneNumber = order.recipientInfo.replace(
+                              /\D/g,
+                              ""
+                            ); // استخراج الرقم فقط
+                            window.open(
+                              `https://wa.me/${phoneNumber}`,
+                              "_blank"
+                            ); // فتح الرابط في نافذة جديدة
+                          }}
+                          className="text-green-500 font-semibold flex items-center gap-2 hover:text-green-600 focus:outline-none"
+                        >
+                          <span>
+                            {order.recipientInfo.replace(/[^\d+]/g, "")}
+                          </span>{" "}
+                          {/* استخراج الرقم */}
+                          <FaWhatsapp className="text-green-500" />
+                        </button>
                       </div>
                     </td>
 
