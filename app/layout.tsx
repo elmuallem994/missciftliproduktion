@@ -15,7 +15,7 @@ import LocalIcons from "@/components/localIcons";
 
 export const metadata: Metadata = {
   title: "Miss Ciftlik",
-  description: "Taze süt ve peynir",
+  description: "Taze süt ve peyni",
 };
 
 export default function RootLayout({
