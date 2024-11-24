@@ -112,7 +112,7 @@ const OrderDetails = ({ params }: { params: { orderId: string } }) => {
           <strong className="text-orange-500">Bölge:</strong>
           <span className="ml-2">
             {orderDetails.orderItems[0]?.regionName || "Bilgi Yok"} -
-            {orderDetails.orderItems[0]?.neighborhoods || "Bilgi Yok"}
+            {orderDetails.orderItems[0]?.neighborhoodName || "Bilgi Yok"}
           </span>
         </p>
 

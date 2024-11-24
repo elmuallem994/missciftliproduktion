@@ -16,7 +16,7 @@ import {
   AlertDialogDescription,
   AlertDialogCancel,
 } from "@/app/components/ui/alert-dialog";
-import { FaEye, FaWhatsapp } from "react-icons/fa";
+import { FaEye } from "react-icons/fa";
 
 const OrdersPage = () => {
   const { user } = useUser();
@@ -149,33 +149,10 @@ const OrdersPage = () => {
                     </td>
 
                     <td className="px-3 py-2 sm:px-6 sm:py-4 text-sm sm:text-base border-b text-center">
-                      <div className="flex flex-col items-center gap-2">
-                        {/* عرض الاسم */}
+                      <div className="flex items-center justify-center gap-2">
                         <span className="text-gray-700 font-semibold">
-                          {order.recipientInfo.split(" ")[0]}{" "}
-                          {/* استخراج الاسم فقط */}
+                          {order.recipientInfo}
                         </span>
-
-                        {/* عرض رقم الهاتف كزر واتساب */}
-                        <button
-                          onClick={() => {
-                            const phoneNumber = order.recipientInfo.replace(
-                              /\D/g,
-                              ""
-                            ); // استخراج الرقم فقط
-                            window.open(
-                              `https://wa.me/${phoneNumber}`,
-                              "_blank"
-                            ); // فتح الرابط في نافذة جديدة
-                          }}
-                          className="text-green-500 font-semibold flex items-center gap-2 hover:text-green-600 focus:outline-none"
-                        >
-                          <span>
-                            {order.recipientInfo.replace(/[^\d+]/g, "")}
-                          </span>{" "}
-                          {/* استخراج الرقم */}
-                          <FaWhatsapp className="text-green-500" />
-                        </button>
                       </div>
                     </td>
 
@@ -303,7 +280,7 @@ const OrdersPage = () => {
                                       "Bilgi Yok"}{" "}
                                     -{" "}
                                     {selectedOrder.orderItems[0]
-                                      ?.neighborhoods || "Bilgi Yok"}
+                                      ?.neighborhoodName || "Bilgi Yok"}
                                   </p>
                                   <p>
                                     <span className="text-orange-600 font-semibold pr-4">
@@ -483,7 +460,7 @@ const OrdersPage = () => {
                           </p>
                           <p>
                             <span className="text-orange-600 font-semibold pr-4">
-                              Teslim Tarihi:
+                              Teslimat Tarihi:
                             </span>{" "}
                             {selectedOrder.deliveryDate
                               ? new Date(
@@ -546,7 +523,7 @@ const OrdersPage = () => {
                             {selectedOrder.orderItems[0]?.regionName ||
                               "Bilgi Yok"}{" "}
                             -{" "}
-                            {selectedOrder.orderItems[0]?.neighborhoods ||
+                            {selectedOrder.orderItems[0]?.neighborhoodName ||
                               "Bilgi Yok"}
                           </p>
                           <p>

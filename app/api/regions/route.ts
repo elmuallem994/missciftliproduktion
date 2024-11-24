@@ -3,14 +3,27 @@
 import prisma from "@/utils/connect";
 import { NextRequest, NextResponse } from "next/server";
 
-// Fetch all regions
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const regions = await prisma.region.findMany();
+    const regions = await prisma.region.findMany({
+      include: {
+        neighborhoods: {
+          select: {
+            id: true,
+            name: true,
+            deliveryDays: true, // تأكد من تضمين الحقل
+            startTime: true, // تأكد من تضمين الحقل
+            endTime: true, // تأكد من تضمين الحقل
+          },
+        },
+      },
+    });
+
     return NextResponse.json(regions, { status: 200 });
   } catch (error) {
+    console.error("Error fetching regions:", error);
     return NextResponse.json(
-      { message: "Error fetching regions", error },
+      { message: "Error fetching regions" },
       { status: 500 }
     );
   }
@@ -18,48 +31,45 @@ export async function GET() {
 
 // POST endpoint in your API file
 // POST endpoint in your API file
-export const POST = async (req: NextRequest) => {
+export async function POST(req: NextRequest) {
   try {
-    const { name, deliveryDays, neighborhoods, startTime, endTime } =
-      await req.json();
+    const { name } = await req.json(); // جلب اسم المنطقة من الطلب
 
-    // تحقق من أن البيانات الأساسية موجودة
-    if (!name || !deliveryDays || !startTime || !endTime) {
+    if (!name) {
       return NextResponse.json(
-        { message: "Missing required fields" },
+        { message: "Region name is required" },
         { status: 400 }
       );
     }
 
-    // التحقق فقط من وجود نفس الحي بدون التحقق من المنطقة
-    const existingNeighborhood = await prisma.region.findFirst({
-      where: {
-        neighborhoods: neighborhoods, // التحقق من الحي فقط إذا كان محددًا
-      },
+    const existingRegion = await prisma.region.findUnique({
+      where: { name },
     });
 
-    // إذا كان اسم الحي موجودًا بالفعل
-    if (existingNeighborhood) {
+    if (existingRegion) {
       return NextResponse.json(
-        {
-          message: "Neighborhood already exists",
-        },
+        { message: "Region with the same name already exists" },
         { status: 409 }
       );
     }
 
-    // إضافة المنطقة الجديدة
+    // إنشاء منطقة جديدة
     const newRegion = await prisma.region.create({
       data: {
-        name,
-        deliveryDays, // يتم تخزينها كـ JSON تلقائيًا
-        neighborhoods: neighborhoods || null,
-        startTime,
-        endTime,
+        name, // استخدام المتغير 'name' من الطلب
+      },
+      include: {
+        neighborhoods: true, // تضمين الأحياء
       },
     });
 
-    return NextResponse.json(newRegion, { status: 201 });
+    return NextResponse.json(
+      {
+        ...newRegion,
+        neighborhoods: newRegion.neighborhoods || [], // تأكد من وجود خاصية الأحياء
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error creating region:", error);
     return NextResponse.json(
@@ -67,4 +77,4 @@ export const POST = async (req: NextRequest) => {
       { status: 500 }
     );
   }
-};
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,14 +18,14 @@ import {
 } from "@/app/components/ui/form";
 import { Separator } from "@/app/components/ui/separator";
 import { useRouter } from "next/navigation";
-import { useLoadingStore } from "@/utils/store"; // Import the store
+import { useLoadingStore } from "@/utils/store";
 
 type CategoryData = {
   id: string;
   title: string;
   desc: string;
   slug: string;
-  img: string; // إذا كانت الصورة اختيارية
+  img: string; // الصورة المحفوظة سابقًا
 };
 
 // Schema for validation
@@ -43,10 +43,17 @@ const categorySchema = z.object({
 type CategoryFormValues = z.infer<typeof categorySchema>;
 
 const AddCategoryForm = ({ categoryData }: { categoryData?: CategoryData }) => {
-  const { isLoading, setLoading } = useLoadingStore(); // Destructure the state and the setter function
+  const { isLoading, setLoading } = useLoadingStore();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const router = useRouter();
+
+  // قم بتحديث حالة المعاينة عند تحميل الصفحة إذا كانت الصورة موجودة
+  useEffect(() => {
+    if (categoryData?.img) {
+      setPreview(categoryData.img); // تعيين الصورة المحفوظة كمعاينة
+    }
+  }, [categoryData]);
 
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
@@ -62,7 +69,7 @@ const AddCategoryForm = ({ categoryData }: { categoryData?: CategoryData }) => {
     const selectedFile = (target.files as FileList)[0];
     setFile(selectedFile);
     const filePreview = URL.createObjectURL(selectedFile);
-    setPreview(filePreview);
+    setPreview(filePreview); // تحديث المعاينة عند رفع صورة جديدة
   };
 
   const upload = async () => {
@@ -84,7 +91,7 @@ const AddCategoryForm = ({ categoryData }: { categoryData?: CategoryData }) => {
 
   const onSubmit = async (data: CategoryFormValues) => {
     try {
-      setLoading(true); // Set loading to true
+      setLoading(true);
       let imgUrl = categoryData?.img || "";
 
       if (file) {
@@ -116,7 +123,7 @@ const AddCategoryForm = ({ categoryData }: { categoryData?: CategoryData }) => {
       console.error(error);
       toast.error("حدث خطأ في الاتصال.");
     } finally {
-      setLoading(false); // Set loading to false
+      setLoading(false);
     }
   };
 

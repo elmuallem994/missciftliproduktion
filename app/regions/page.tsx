@@ -1,20 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Separator } from "@/app/components/ui/separator";
 import { toast } from "react-toastify";
-import { FaEdit, FaTrash } from "react-icons/fa"; // مكتبة الأيقونات
+import { FaEdit, FaTrash } from "react-icons/fa";
 import { useLoadingStore } from "@/utils/store";
-import TimePicker from "react-time-picker"; // استيراد TimePicker
-import "react-time-picker/dist/TimePicker.css"; // تأكد من أنك قمت بإضافة هذا السطر لإضافة الأنماط الخاصة بالمكون
 
-type EntryType = {
-  id: number; // إضافة حقل 'id' هنا
+type RegionType = {
+  id: number;
   name: string;
-  neighborhoods: string | null;
-  deliveryDays: string[];
+  neighborhoods: NeighborhoodType[];
+};
+
+type NeighborhoodType = {
+  id: number;
+  name: string;
+  deliveryDays: number[];
   startTime: string;
   endTime: string;
 };
@@ -29,334 +32,419 @@ const dayNamesMap: { [key: string]: { [key: number]: string } } = {
     6: "السبت",
     0: "الأحد",
   },
-  en: {
-    1: "Monday",
-    2: "Tuesday",
-    3: "Wednesday",
-    4: "Thursday",
-    5: "Friday",
-    6: "Saturday",
-    0: "Sunday",
-  },
 };
 
-const allDays = [1, 2, 3, 4, 5, 6, 0]; // الأرقام تمثل الأيام من الإثنين إلى الأحد
+const allDays = [1, 2, 3, 4, 5, 6, 0];
 
 const ManageLocations = () => {
-  const [region, setRegion] = useState("");
-  const [neighborhoods, setNeighborhoods] = useState<string | null>(null);
-  const [selectedDays, setSelectedDays] = useState<Array<string | number>>([]);
+  const [regions, setRegions] = useState<RegionType[]>([]);
+  const [regionName, setRegionName] = useState("");
+  const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
+  const [neighborhoodName, setNeighborhoodName] = useState("");
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const [startTime, setStartTime] = useState<string>("");
+  const [endTime, setEndTime] = useState<string>("");
+  const [editingRegion, setEditingRegion] = useState<RegionType | null>(null);
+  const [editingNeighborhood, setEditingNeighborhood] =
+    useState<NeighborhoodType | null>(null);
 
-  const [startTime, setStartTime] = useState<string | null>(null);
-  const [endTime, setEndTime] = useState<string | null>(null);
-
-  const [entries, setEntries] = useState<EntryType[]>([]);
-  const [editingRegionId, setEditingRegionId] = useState<number | null>(null);
   const setLoading = useLoadingStore((state) => state.setLoading);
 
-  // Handle day selection
-  const handleDayChange = (dayNumber: number, isChecked: boolean) => {
-    setSelectedDays((prevDays) =>
-      isChecked
-        ? [...prevDays, dayNumber]
-        : prevDays.filter((d) => d !== dayNumber)
-    );
-  };
+  // Fetch regions function
 
-  // Fetch existing entries from API on page load
-  useEffect(() => {
-    const fetchEntries = async () => {
-      setLoading(true); // تفعيل التحميل عند بدء الجلب
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/regions`,
-          {
-            method: "GET",
-          }
-        );
+  // Fetch regions on component mount
 
-        if (!response.ok) {
-          throw new Error("فشل جلب الإدخالات");
-        }
-
-        const data = await response.json();
-        setEntries(data);
-      } catch (error) {
-        toast.error("فشل تحميل الإدخالات");
-        console.error("Error fetching entries:", error);
-      } finally {
-        setLoading(false); // إيقاف التحميل عند الانتهاء
+  const fetchRegions = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/regions`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch regions");
       }
-    };
+      const data = await response.json();
+      setRegions(data);
+    } catch {
+      toast.error("Failed to load regions");
+    } finally {
+      setLoading(false);
+    }
+  }, [setLoading, setRegions]);
 
-    fetchEntries();
-  }, [setLoading]);
+  useEffect(() => {
+    fetchRegions();
+  }, [fetchRegions]);
 
-  // Handle adding new entry and saving it to API
-  const handleAddEntry = async () => {
-    if (
-      region &&
-      neighborhoods &&
-      selectedDays.length > 0 &&
-      startTime &&
-      endTime
-    ) {
-      const newEntry = {
-        name: region,
-        deliveryDays: selectedDays, // لا تحتاج لتحويل JSON هنا
-        neighborhoods: neighborhoods,
-        startTime: startTime,
-        endTime: endTime,
-      };
+  // Add a new region
+  const handleAddRegion = async () => {
+    if (!regionName) {
+      toast.error("يرجى إدخال اسم المنطقة");
+      return;
+    }
 
-      // إرسال البيانات إلى الخادم
+    setLoading(true);
+    try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/regions`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(newEntry),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: regionName }),
         }
       );
-
-      if (response.status === 409) {
-        toast.error("المنطقة التي تحمل نفس الاسم والحي موجودة بالفعل.");
-        return;
-      }
-
       if (!response.ok) {
-        toast.error("فشل حفظ الإدخال.");
-        return;
+        throw new Error("Failed to add region");
       }
-
-      // جلب البيانات المحدثة
-      const savedEntry = await response.json();
-      setEntries([...entries, savedEntry]);
-      // إعادة تعيين المدخلات
-      setRegion("");
-      setNeighborhoods(null);
-      setSelectedDays([]);
-      setStartTime("");
-      setEndTime("");
-    } else {
-      toast.error("برجاء ملء كافة الحقول واختيار أيام التسليم.");
+      const savedRegion = await response.json();
+      setRegions((prevRegions) => [...prevRegions, savedRegion]);
+      setRegionName("");
+      toast.success("تمت إضافة المنطقة بنجاح");
+    } catch {
+      toast.error("فشل في إضافة المنطقة");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleEdit = (entry: EntryType & { id: number }) => {
-    setEditingRegionId(entry.id); // Store the ID of the region being edited
-    setRegion(entry.name);
-    setNeighborhoods(entry.neighborhoods);
-    setSelectedDays(entry.deliveryDays);
-    setStartTime(entry.startTime);
-    setEndTime(entry.endTime);
+  // Add a new neighborhood
+  const handleAddNeighborhood = async () => {
+    if (
+      !selectedRegionId ||
+      !neighborhoodName ||
+      selectedDays.length === 0 ||
+      !startTime ||
+      !endTime
+    ) {
+      toast.error("يرجى ملء جميع الحقول لإضافة حي");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/neighborhoods`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            regionId: selectedRegionId,
+            name: neighborhoodName,
+            deliveryDays: selectedDays,
+            startTime,
+            endTime,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to add neighborhood");
+      }
+
+      await fetchRegions(); // Reload regions
+
+      setNeighborhoodName("");
+      setSelectedDays([]);
+      setStartTime("");
+      setEndTime("");
+      toast.success("تمت إضافة الحي بنجاح");
+    } catch {
+      toast.error("فشل في إضافة الحي");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // إرسال طلب التعديل
-  const handleUpdateEntry = async (regionId: number) => {
-    // Construct updated entry data
-    const updatedEntry = {
-      name: region,
-      deliveryDays: selectedDays,
-      neighborhoods: neighborhoods,
-      startTime: startTime,
-      endTime: endTime,
-    };
+  // Delete a neighborhood
+  const handleDeleteNeighborhood = async (neighborhoodId: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/neighborhoods/${neighborhoodId}`,
+        { method: "DELETE" }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to delete neighborhood");
+      }
 
-    setLoading(true); // تفعيل التحميل عند بدء الإضافة
+      await fetchRegions();
 
+      toast.success("تم حذف الحي بنجاح");
+    } catch {
+      toast.error("فشل في حذف الحي");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteRegion = async (regionId: number) => {
+    setLoading(true);
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/regions/${regionId}`,
+        { method: "DELETE" }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete region");
+      }
+
+      await fetchRegions(); // تحديث قائمة المناطق بعد الحذف
+
+      toast.success("تم حذف المنطقة بنجاح");
+    } catch (error) {
+      toast.error("فشل في حذف المنطقة");
+      console.error("Error deleting region:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update region
+  const handleUpdateRegion = async () => {
+    if (!editingRegion) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/regions/${editingRegion.id}`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatedEntry),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: regionName }),
         }
       );
 
       if (!response.ok) {
-        toast.error("فشل تحديث المنطقة.");
-        return;
+        throw new Error("Failed to update region");
       }
 
-      // Refresh entries with updated data
-      const updatedData = await response.json();
-      setEntries((prevEntries) =>
-        prevEntries.map((entry) =>
-          entry.id === regionId ? { ...entry, ...updatedData } : entry
-        )
-      );
-
-      // Reset editing mode and clear the input fields
-      setEditingRegionId(null);
-      setRegion("");
-      setNeighborhoods(null);
-      setSelectedDays([]);
-      setStartTime("");
-      setEndTime("");
-      toast.success("تم تحديث المنطقة بنجاح.");
-    } catch (error) {
-      console.error("Error updating region:", error);
-      toast.error("حدث خطأ أثناء تحديث المنطقة.");
+      await fetchRegions();
+      setEditingRegion(null);
+      setRegionName("");
+      toast.success("تم تعديل المنطقة بنجاح");
+    } catch {
+      toast.error("فشل تعديل المنطقة");
     } finally {
-      setLoading(false); // إيقاف التحميل عند الانتهاء
+      setLoading(false);
     }
   };
 
-  const handleDelete = async (regionId: number) => {
-    setLoading(true); // تفعيل التحميل عند بدء الحذف
+  // Update neighborhood
+  const handleUpdateNeighborhood = async () => {
+    if (!editingNeighborhood) return;
+
+    setLoading(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/regions/${regionId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/neighborhoods/${editingNeighborhood.id}`,
         {
-          method: "DELETE",
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: neighborhoodName,
+            deliveryDays: selectedDays,
+            startTime,
+            endTime,
+          }),
         }
       );
 
       if (!response.ok) {
-        toast.error("فشل حذف المنطقة.");
-        return;
+        throw new Error("Failed to update neighborhood");
       }
 
-      // تحديث الإدخالات بعد الحذف
-      setEntries(entries.filter((entry) => entry.id !== regionId));
-      toast.success("تم حذف المنطقة بنجاح.");
-    } catch (error) {
-      console.error("Error deleting region:", error);
-      toast.error("حدث خطأ أثناء حذف المنطقة.");
+      await fetchRegions();
+      setEditingNeighborhood(null);
+      setNeighborhoodName("");
+      setSelectedDays([]);
+      setStartTime("");
+      setEndTime("");
+      toast.success("تم تعديل الحي بنجاح");
+    } catch {
+      toast.error("فشل تعديل الحي");
     } finally {
-      setLoading(false); // إيقاف التحميل عند الانتهاء
+      setLoading(false);
     }
   };
 
   return (
-    <div className="main-content flex items-center justify-center p-4 sm:p-6 lg:p-8 ">
-      <div className="bg-white p-4 md:p-8 rounded-lg shadow-lg w-full md:w-2/3">
-        <h1 className="text-xl text-orange-400 sm:text-2xl font-bold">
-          إدارة المناطق
-        </h1>
+    <div className="main-content w-full p-4 sm:p-6 md:p-8 lg:p-10">
+      <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-lg shadow-md max-w-full lg:max-w-5xl mx-auto">
+        <h1 className="text-2xl font-bold text-orange-500">إدارة المناطق</h1>
         <Separator className="my-4" />
 
-        {/* Region Input */}
-        <div className="flex flex-col gap-4 mb-4 w-full md:w-1/3">
+        {/* Add Region Section */}
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-2">إضافة منطقة جديدة</h2>
           <Input
-            placeholder="أدخل المنطقة"
-            value={region}
-            onChange={(e) => setRegion(e.target.value)}
-            className="w-full"
+            placeholder="اسم المنطقة"
+            value={regionName}
+            onChange={(e) => setRegionName(e.target.value)}
+            className="mb-4"
           />
+          <Button
+            onClick={editingRegion ? handleUpdateRegion : handleAddRegion}
+          >
+            {editingRegion ? "تعديل" : "إضافة"}
+          </Button>
         </div>
 
-        {/* Neighborhood Input */}
-        <div className="flex flex-col gap-4 mb-4 w-full md:w-1/3">
+        <Separator className="my-4" />
+
+        {/* Add Neighborhood Section */}
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-2">
+            {editingNeighborhood ? "تعديل الحي" : "إضافة حي جديد"}
+          </h2>
+          <select
+            onChange={(e) => setSelectedRegionId(Number(e.target.value))}
+            value={selectedRegionId || ""}
+            className="mb-4 w-full border border-gray-300 rounded-md p-2"
+          >
+            <option value="">اختر منطقة</option>
+            {regions.map((region) => (
+              <option key={region.id} value={region.id}>
+                {region.name}
+              </option>
+            ))}
+          </select>
           <Input
-            placeholder="أدخل الحي"
-            value={neighborhoods || ""}
-            onChange={(e) => setNeighborhoods(e.target.value || null)}
-            className="w-full"
+            placeholder="اسم الحي"
+            value={neighborhoodName}
+            onChange={(e) => setNeighborhoodName(e.target.value)}
+            className="mb-4"
           />
-        </div>
-
-        {/* Days of the Week Selection */}
-        <div className="flex flex-wrap items-center gap-4 mb-4">
-          {allDays.map((dayNumber) => (
-            <div key={dayNumber} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={selectedDays.includes(dayNumber)}
-                onChange={(e) => handleDayChange(dayNumber, e.target.checked)}
-                className="mr-1"
-              />
-              <label>{dayNamesMap["ar"][dayNumber]}</label>{" "}
-              {/* استخدم "tr" للغة التركية */}
-            </div>
-          ))}
-        </div>
-
-        {/* Delivery Time Selection */}
-        <div className="flex flex-col gap-4 mb-4">
-          <label className="text-lg font-semibold">موعد التسليم:</label>
-          <div className="flex flex-col sm:flex-row gap-4 items-center">
-            <TimePicker
-              onChange={setStartTime}
+          <div className="flex flex-wrap gap-4 mb-4">
+            {allDays.map((dayNumber) => (
+              <label key={dayNumber} className="flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={selectedDays.includes(dayNumber)}
+                  onChange={(e) =>
+                    setSelectedDays((prevDays) =>
+                      e.target.checked
+                        ? [...prevDays, dayNumber]
+                        : prevDays.filter((d) => d !== dayNumber)
+                    )
+                  }
+                />
+                {dayNamesMap["ar"][dayNumber]}
+              </label>
+            ))}
+          </div>
+          <div className="flex gap-2 mb-4">
+            <Input
+              type="time"
               value={startTime}
-              disableClock
-              locale="en-US"
-              format="HH:mm" // تحديد تنسيق 24 ساعة
-              clearIcon={null} // إخفاء أيقونة "X"
-              className="text-lg p-2 border border-gray-300 rounded-md w-full sm:w-auto"
+              onChange={(e) => setStartTime(e.target.value)}
             />
-            <span className="text-lg font-semibold">الى</span>
-            <TimePicker
-              onChange={setEndTime}
+            <Input
+              type="time"
               value={endTime}
-              disableClock
-              locale="en-US"
-              format="HH:mm" // تحديد تنسيق 24 ساعة
-              clearIcon={null} // إخفاء أيقونة "X"
-              className="text-lg p-2 border border-gray-300 rounded-md w-full sm:w-auto"
+              onChange={(e) => setEndTime(e.target.value)}
             />
           </div>
+          <Button
+            onClick={
+              editingNeighborhood
+                ? handleUpdateNeighborhood
+                : handleAddNeighborhood
+            }
+          >
+            {editingNeighborhood ? "تعديل" : "إضافة"}
+          </Button>
         </div>
 
-        <Button
-          onClick={() => {
-            if (editingRegionId) {
-              handleUpdateEntry(editingRegionId);
-            } else {
-              handleAddEntry();
-            }
-          }}
-          className="w-full sm:w-auto"
-        >
-          {editingRegionId ? "تحديث الإدخال" : "إضافة إدخال"}
-        </Button>
+        <Separator className="my-4" />
 
-        {/* عرض الإدخالات في جدول */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full  border-collapse mt-4">
-            <thead>
-              <tr>
-                <th className="border p-2">منطقة</th>
-                <th className="border p-2">حيّ</th>
-                <th className="border p-2">أيام التسليم</th>
-                <th className="border p-2">وقت البدء</th>
-                <th className="border p-2">وقت النهاية</th>
-                <th className="border p-2">الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((entry, index) => (
-                <tr key={index} className="border">
-                  <td className="border p-2">{entry.name}</td>
-                  <td className="border p-2">
-                    {entry.neighborhoods ? entry.neighborhoods : "جميع الأحياء"}
-                  </td>
-                  <td className="border p-2">
-                    {entry.deliveryDays
-                      .map((dayNumber) => dayNamesMap["ar"][Number(dayNumber)])
-                      .join(", ")}
-                  </td>
+        {/* Regions and Neighborhoods Table */}
+        <div>
+          <h2 className="text-lg font-semibold mb-2">المناطق والأحياء</h2>
+          {regions.map((region) => (
+            <div key={region.id} className="mb-6">
+              <h3 className="text-lg font-bold mb-2 text-orange-500">
+                {region.name}
+              </h3>
 
-                  <td className="border p-2">{entry.startTime}</td>
-                  <td className="border p-2">{entry.endTime}</td>
-                  <td className="border p-2 flex gap-2">
-                    <button onClick={() => handleEdit(entry)}>
-                      <FaEdit className="text-blue-600 " />
-                    </button>
-                    <button onClick={() => handleDelete(entry.id)}>
-                      <FaTrash className="text-red-600" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              <button
+                className="text-blue-500 hover:text-blue-700"
+                onClick={() => {
+                  setEditingRegion(region);
+                  setRegionName(region.name);
+                }}
+              >
+                <FaEdit />
+              </button>
+              <button
+                className="text-red-500 hover:text-red-700 pl-4"
+                onClick={() => handleDeleteRegion(region.id)}
+              >
+                <FaTrash />
+              </button>
+
+              {region.neighborhoods.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-gray-200 text-xs sm:text-sm lg:text-base">
+                    <thead>
+                      <tr>
+                        <th className="border p-2">اسم الحي</th>
+                        <th className="border p-2">أيام التوصيل</th>
+                        <th className="border p-2">وقت البدء</th>
+                        <th className="border p-2">وقت النهاية</th>
+                        <th className="border p-2">الإجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {region.neighborhoods.map((neighborhood) => (
+                        <tr key={neighborhood.id}>
+                          <td className="border p-2">{neighborhood.name}</td>
+                          <td className="border p-2">
+                            {neighborhood.deliveryDays &&
+                            neighborhood.deliveryDays.length > 0
+                              ? neighborhood.deliveryDays
+                                  .map((day) => dayNamesMap["ar"][day])
+                                  .join(", ")
+                              : "لا توجد أيام توصيل"}
+                          </td>
+                          <td className="border p-2">
+                            {neighborhood.startTime}
+                          </td>
+                          <td className="border p-2">{neighborhood.endTime}</td>
+                          <td className="border p-2 text-center">
+                            <button
+                              className="text-blue-500 hover:text-blue-700"
+                              onClick={() => {
+                                setEditingNeighborhood(neighborhood);
+                                setNeighborhoodName(neighborhood.name);
+                                setSelectedDays(neighborhood.deliveryDays);
+                                setStartTime(neighborhood.startTime);
+                                setEndTime(neighborhood.endTime);
+                              }}
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
+                              className="text-red-500 pl-6"
+                              onClick={() =>
+                                handleDeleteNeighborhood(
+                                  String(neighborhood.id)
+                                )
+                              } // تحويل المعرف إلى نص
+                            >
+                              <FaTrash />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-gray-500">لا توجد أحياء</p>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>

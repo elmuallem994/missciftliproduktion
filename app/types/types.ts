@@ -48,7 +48,7 @@ export type OrderItemType = {
   endTime?: string; // وقت الانتهاء (اختياري)
   address?: string; // العنوان (اختياري)
   regionName?: string; // اسم المنطقة (اختياري)
-  neighborhoods?: string; // اسم الحي (اختياري)
+  neighborhoodName?: string; // اسم الحي (اختياري)
 };
 
 export type ProductType = {

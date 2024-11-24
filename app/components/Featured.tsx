@@ -35,8 +35,9 @@ const featuredProducts = [
   },
   {
     id: 6,
-    title: "Zeytinyağı",
-    desc: "1 litre Hatay'dan soğuk sıkım zeytinyağı ",
+    title: "Jersey inek sütü",
+    desc: "5 LT. Çiğ 100% jersey inek sütü",
+    price: "350",
     img: "/cat5.png",
   },
 ];

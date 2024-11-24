@@ -1,13 +1,9 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-
 "use client";
 
+import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useState, useEffect } from "react";
-
 import { toast } from "react-hot-toast";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
@@ -37,12 +33,8 @@ type ProductData = {
   desc: string;
   price: number;
   catSlug: string;
-  img: string;
+  img: string; // الصورة الحالية
 };
-
-interface PageProps {
-  productData?: ProductData;
-}
 
 const productSchema = z.object({
   title: z.string().min(3, { message: "العنوان مطلوب" }),
@@ -51,7 +43,7 @@ const productSchema = z.object({
     (value) => parseFloat(z.string().parse(value)),
     z.number().positive({ message: "يجب أن يكون السعر رقمًا موجبًا" })
   ),
-  catSlug: z.string().nonempty({ message: "يجب اختيار الفئة" }), // التحقق فقط من وجود قيمة
+  catSlug: z.string().nonempty({ message: "يجب اختيار الفئة" }),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -59,9 +51,7 @@ type ProductFormValues = z.infer<typeof productSchema>;
 const AddPage = ({ productData }: { productData?: ProductData }) => {
   const { isSignedIn, user } = useUser();
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [imageError, setImageError] = useState(false); // حالة لتتبع خطأ الصورة
-
+  const [preview, setPreview] = useState<string | null>(null); // حالة المعاينة
   const [categories, setCategories] = useState<
     { id: string; title: string; slug: string }[]
   >([]);
@@ -75,9 +65,15 @@ const AddPage = ({ productData }: { productData?: ProductData }) => {
       title: productData?.title || "",
       desc: productData?.desc || "",
       price: productData?.price || 0,
-      catSlug: productData?.catSlug || "", // تأكد من وجود قيمة هنا
+      catSlug: productData?.catSlug || "",
     },
   });
+
+  useEffect(() => {
+    if (productData?.img) {
+      setPreview(productData.img); // إذا كانت الصورة موجودة، قم بعرضها في المعاينة
+    }
+  }, [productData]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -95,7 +91,7 @@ const AddPage = ({ productData }: { productData?: ProductData }) => {
         console.error(error);
         toast.error("فشل جلب الفئات.");
       } finally {
-        setLoading(false); // Stop loading after fetching categories
+        setLoading(false);
       }
     };
 
@@ -106,11 +102,11 @@ const AddPage = ({ productData }: { productData?: ProductData }) => {
     const selectedFile = (e.target.files as FileList)[0];
     setFile(selectedFile);
     const filePreview = URL.createObjectURL(selectedFile);
-    setPreview(filePreview);
+    setPreview(filePreview); // تحديث المعاينة عند رفع صورة جديدة
   };
 
   const upload = async () => {
-    setLoading(true); // Start loading for image upload
+    setLoading(true);
     try {
       const data = new FormData();
       data.append("file", file!);
@@ -128,25 +124,16 @@ const AddPage = ({ productData }: { productData?: ProductData }) => {
       return resData.url;
     } catch (error) {
       toast.error("حدث خطأ أثناء رفع الصورة.");
-      throw error; // إعادة الخطأ لإيقاف عملية الحفظ إذا فشل رفع الصورة
+      throw error;
     } finally {
-      setLoading(false); // Stop loading after image upload
+      setLoading(false);
     }
   };
 
   const handleSubmit = async (data: ProductFormValues) => {
     setLoading(true);
     try {
-      setLoading(true); // Start loading
-      // If there's no image file and it's a new product, show an error message
-      if (!file) {
-        toast.error("يرجى تحميل صورة للمنتج.");
-        return; // Stop execution if there's no image
-      }
-
-      setImageError(false); // إعادة تعيين حالة الخطأ إذا تم تحميل صورة
-
-      let imgUrl = productData?.img || ""; // Use existing image URL if no new image is uploaded
+      let imgUrl = productData?.img || ""; // استخدام الصورة الحالية إذا لم يتم تحميل صورة جديدة
 
       if (file) {
         imgUrl = await upload();
@@ -178,7 +165,7 @@ const AddPage = ({ productData }: { productData?: ProductData }) => {
       console.log(err);
       toast.error("حدث خطأ أثناء حفظ المنتج.");
     } finally {
-      setLoading(false); // Stop loading after saving product
+      setLoading(false);
     }
   };
 
@@ -193,12 +180,13 @@ const AddPage = ({ productData }: { productData?: ProductData }) => {
             <h1 className="text-2xl md:text-3xl pb-7 text-orange-300 font-bold text-center">
               {productData ? "تعديل المنتج" : "أضف منتج جديد"}
             </h1>
+
             <FormItem>
               <FormLabel
                 htmlFor="file"
                 className="cursor-pointer text-red-500 border p-2"
               >
-                تحميل الصورة{" "}
+                تحميل الصورة
               </FormLabel>
 
               <input
@@ -212,19 +200,13 @@ const AddPage = ({ productData }: { productData?: ProductData }) => {
                   <Image
                     src={preview}
                     alt="Uploaded Preview"
-                    width={70}
-                    height={70}
+                    width={100}
+                    height={100}
                     className="object-cover aspect-square rounded-md"
                   />
-                  <p className="mt-2 text-green-500">تم تحميل الصورة بنجاح!</p>
                 </div>
               ) : (
                 <p className="mt-2 text-red-500">لم يتم تحميل الصورة بعد.</p>
-              )}
-              {imageError && (
-                <FormMessage className="text-red-500">
-                  الصورة مطلوبة.
-                </FormMessage>
               )}
             </FormItem>
 

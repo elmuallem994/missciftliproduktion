@@ -13,26 +13,30 @@ export const GET = async (
     // جلب العنوان بناءً على userId
     const address = await prisma.address.findFirst({
       where: { userId },
-      include: { region: true },
+      include: {
+        region: true, // تضمين معلومات المنطقة
+        neighborhood: true, // تضمين معلومات الحي
+      },
     });
 
-    if (!address || !address.region) {
+    // التحقق إذا لم يتم العثور على العنوان أو المنطقة أو الحي
+    if (!address || !address.region || !address.neighborhood) {
       return NextResponse.json(
-        { message: "Address or region not found" },
+        { message: "Address, region, or neighborhood not found" },
         { status: 404 }
       );
     }
 
-    // إرجاع جميع تفاصيل العنوان مع المنطقة
+    // إرجاع جميع تفاصيل العنوان مع المنطقة والحي
     return NextResponse.json({
       addressId: address.id,
       il: address.il,
       adres: address.adres,
       regionId: address.regionId,
       regionName: address.region.name,
-      neighborhoods: address.region.neighborhoods, // إضافة الحي من المنطقة
-      startTime: address.region.startTime, // إضافة وقت البدء من المنطقة
-      endTime: address.region.endTime, // إضافة وقت الانتهاء من المنطقة
+      neighborhoodId: address.neighborhoodId,
+      neighborhoodName: address.neighborhood.name,
+      isRegionAvailable: address.isRegionAvailable,
     });
   } catch (error) {
     console.error("Error fetching address:", error);

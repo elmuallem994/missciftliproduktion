@@ -5,14 +5,20 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import prisma from "@/utils/connect";
 
 // API for creating a new address
-// API for creating a new address
 export async function POST(req: NextRequest) {
   try {
-    // استخراج الحقول الضرورية
-    const { il, adres, regionId } = await req.json(); // لا داعي لـ neighborhoods بعد الآن
-    console.log({ il, adres, regionId });
+    // Extract necessary fields from the request
+    const { il, adres, regionId, neighborhoodId } = await req.json();
 
-    // تحقق من المصادقة
+    // Validate the received data
+    if (!il || !adres || !regionId || !neighborhoodId) {
+      return NextResponse.json(
+        { message: "Tüm alanları doldurduğunuzdan emin olunuz." },
+        { status: 400 }
+      );
+    }
+
+    // Check authentication
     const { userId } = auth();
 
     if (!userId) {
@@ -22,17 +28,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // تحقق مما إذا كان المستخدم موجودًا في قاعدة البيانات
+    // Check if the user exists in the database
     let user = await prisma.user.findUnique({
       where: {
         id: userId,
       },
     });
 
-    // إذا لم يكن المستخدم موجودًا، قم بإنشائه
+    // If the user doesn't exist, create them
     if (!user) {
-      const client = clerkClient(); // استدعاء clerkClient كدالة
-      const clerkUser = await client.users.getUser(userId);
+      const clerkUser = await clerkClient.users.getUser(userId);
       user = await prisma.user.create({
         data: {
           id: userId,
@@ -44,7 +49,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // تحقق من صحة معرف المنطقة (regionId)
+    // Validate region ID
     const region = await prisma.region.findUnique({
       where: { id: regionId },
     });
@@ -56,13 +61,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // إنشاء العنوان الجديد
+    // Validate neighborhood ID
+    const neighborhood = await prisma.neighborhood.findUnique({
+      where: { id: neighborhoodId },
+    });
+
+    if (!neighborhood) {
+      return NextResponse.json(
+        { message: "Invalid neighborhood ID" },
+        { status: 400 }
+      );
+    }
+
+    // Create the new address
     const newAddress = await prisma.address.create({
       data: {
         il,
         adres,
         regionId,
-        userId, // ربط العنوان بالمستخدم
+        neighborhoodId,
+        userId, // Link the address to the user
       },
     });
 
@@ -70,18 +88,18 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Error creating address:", error);
     return NextResponse.json(
-      { message: "Error creating address", error },
+      { message: "Error creating address" },
       { status: 500 }
     );
   }
 }
 
-// API لجلب جميع العناوين الخاصة بالمستخدم
+// API to fetch all addresses for the authenticated user
+// API to fetch the first address for the authenticated user
 export async function GET() {
   try {
-    const { userId } = auth(); // الحصول على معرف المستخدم من Clerk
+    const { userId } = auth(); // Get the user ID from Clerk
 
-    // إذا كان المستخدم غير مسجل دخول
     if (!userId) {
       return NextResponse.json(
         { message: "User not authenticated!" },
@@ -89,27 +107,49 @@ export async function GET() {
       );
     }
 
-    // جلب العناوين الخاصة بالمستخدم من قاعدة البيانات
-    const addresses = await prisma.address.findMany({
+    // Fetch the user's first address
+    const address = await prisma.address.findFirst({
       where: {
-        userId, // جلب العناوين التي تتطابق مع معرف المستخدم
+        userId,
+      },
+      include: {
+        region: true,
+        neighborhood: true,
       },
     });
 
-    return NextResponse.json(addresses, { status: 200 });
+    if (!address) {
+      return NextResponse.json(
+        { message: "No address found!" },
+        { status: 404 }
+      );
+    }
+
+    // Format the response
+    const formattedAddress = {
+      addressId: address.id,
+      il: address.il,
+      adres: address.adres,
+      regionId: address.regionId,
+      regionName: address.region.name,
+      neighborhoodId: address.neighborhoodId,
+      neighborhoodName: address.neighborhood.name,
+    };
+
+    return NextResponse.json(formattedAddress, { status: 200 });
   } catch (error) {
     return NextResponse.json(
-      { message: "Error fetching addresses", error },
+      { message: "Error fetching address", error },
       { status: 500 }
     );
   }
 }
 
-// API لتعديل العنوان
+// API to update an address
 export async function PUT(req: NextRequest) {
   try {
-    const { il, adres, regionId } = await req.json(); // جلب بيانات العنوان المعدل
-    const { userId } = auth(); // جلب معرف المستخدم من Clerk
+    const { il, adres, regionId, neighborhoodId } = await req.json(); // Get the updated address data
+    const { userId } = auth(); // Get the user ID from Clerk
 
     if (!userId) {
       return NextResponse.json(
@@ -118,15 +158,40 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // تحديث العنوان في قاعدة البيانات بناءً على معرف المستخدم
+    // Validate region ID
+    const region = await prisma.region.findUnique({
+      where: { id: regionId },
+    });
+
+    if (!region) {
+      return NextResponse.json(
+        { message: "Invalid region ID" },
+        { status: 400 }
+      );
+    }
+
+    // Validate neighborhood ID
+    const neighborhood = await prisma.neighborhood.findUnique({
+      where: { id: neighborhoodId },
+    });
+
+    if (!neighborhood) {
+      return NextResponse.json(
+        { message: "Invalid neighborhood ID" },
+        { status: 400 }
+      );
+    }
+
+    // Update the address in the database for the current user
     const updatedAddress = await prisma.address.updateMany({
       where: {
-        userId, // جلب العنوان الذي يملكه المستخدم الحالي
+        userId, // Find the address that belongs to the current user
       },
       data: {
         il,
         adres,
         regionId,
+        neighborhoodId,
       },
     });
 

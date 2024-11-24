@@ -5,13 +5,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FaShoppingBasket } from "react-icons/fa";
 import { FaWhatsapp } from "react-icons/fa"; // استيراد أيقونة واتساب
+import { useUser } from "@clerk/nextjs"; // استيراد بيانات المستخدم
 
 const LocalIcons = () => {
   const { totalItems, totalPrice } = useCartStore();
   const pathname = usePathname();
+  const { user } = useUser(); // جلب بيانات المستخدم
 
-  // إخفاء الأيقونة إذا كان المستخدم في صفحة الكارت
-  if (pathname === "/cart") {
+  // إذا كان المستخدم في صفحة الكارت أو إذا كان المستخدم مشرفًا، إخفاء الأيقونات
+  if (pathname === "/cart" || user?.publicMetadata?.role === "admin") {
     return null;
   }
 

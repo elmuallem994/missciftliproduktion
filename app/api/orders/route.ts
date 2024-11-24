@@ -105,7 +105,7 @@ export const POST = async (req: NextRequest) => {
       endTime: orderData.endTime,
       address: orderData.fullAddress, // حفظ العنوان
       regionName: orderData.regionName, // حفظ اسم المنطقة
-      neighborhoods: orderData.neighborhoods, // حفظ اسم الحي (إذا كان موجود)
+      neighborhoodName: orderData.neighborhoodName, // حفظ اسم الحي (إذا كان موجود)
     }));
 
     // حفظ السجلات في جدول OrderItems

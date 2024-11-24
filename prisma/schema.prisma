@@ -82,7 +82,7 @@ model OrderItem {
   endTime   String?        // حفظ نسخة من وقت الانتهاء كـ 
   address    String?  // حفظ نسخة من العنوان
   regionName String?  // حفظ نسخة من اسم المنطقة
-  neighborhoods String? // حفظ نسخة من الحي (إذا كانت موجودة)
+  neighborhoodName String? // حفظ نسخة من الحي (إذا كانت موجودة)
   quantity  Int
  
   createdAt DateTime @default(now())
@@ -93,22 +93,7 @@ model OrderItem {
 }
 
 
-model Address {
-  id         Int      @id @default(autoincrement())
-  il         String   // City 
-  adres      String   // Full address
-  region     Region   @relation(fields: [regionId], references: [id]) // ربط العنوان بالمنطقة
-  regionId   Int
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orders     Order[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  isRegionAvailable Boolean? @default(true) // إضافة هذا الحقل للإشارة إلى توفر المنطقة
 
-  @@index([regionId])
-  @@index([userId])
-}
 
 
 
@@ -125,18 +110,51 @@ model User {
 }  
 
 model Region {
-  id          Int       @id @default(autoincrement())
-  name        String 
-  deliveryDays Json     // لتخزين الأيام كمصفوفة
-  neighborhoods String // 
-  startTime   String    // وقت بدء التوصيل
-  endTime     String    // وقت نهاية التوصيل
-  orders      Order[]
-  addresses   Address[] 
+  id            Int            @id @default(autoincrement())
+  name          String         // اسم المنطقة
+  neighborhoods Neighborhood[] // العلاقة مع جدول الأحياء
+  orders        Order[]        // الطلبات المرتبطة بالمنطقة
+  addresses     Address[]      // العناوين المرتبطة بالمنطقة
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-    @@unique([name, neighborhoods])
+  @@unique([name]) // لا يمكن تكرار اسم المنطقة
+}
+
+model Neighborhood {
+  id           Int     @id @default(autoincrement())
+  name         String  // اسم الحي
+  regionId     Int     // معرّف المنطقة (مفتاح خارجي)
+  region       Region  @relation(fields: [regionId], references: [id]) // العلاقة مع جدول المناطق
+  addresses    Address[] // العناوين المرتبطة بالحي (اختياري)
+  deliveryDays Json           // تخزين أيام التوصيل كمصفوفة
+  startTime    String         // وقت بدء التوصيل
+  endTime      String         // وقت نهاية التوصيل
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([name, regionId]) // لا يمكن تكرار نفس اسم الحي في نفس المنطقة
+}
+
+
+model Address {
+  id         Int      @id @default(autoincrement())
+  il         String   // City 
+  adres      String   // Full address
+  region     Region   @relation(fields: [regionId], references: [id]) // ربط العنوان بالمنطقة
+  regionId   Int
+  neighborhoodId Int         // معرّف الحي
+  neighborhood   Neighborhood  @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade) // تطبيق الحذف التلقائي
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders     Order[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  isRegionAvailable Boolean? @default(true) // إضافة هذا الحقل للإشارة إلى توفر المنطقة
+
+  @@index([regionId])
+  @@index([userId])
 }
 

@@ -34,7 +34,7 @@ export const sendOrderToWhatsApp = (
   const orderDetails = products
     .map(
       (product, index) =>
-        `*${index + 1}.* 🛍️ _Ürün:_ *${product.title}*\n    _Adet:_ *${
+        `*${index + 1}.*  _Ürün:_ *${product.title}*\n    _Adet:_ *${
           product.quantity
         }*\n    _Fiyat:_ *${product.price} TL*`
     )
@@ -74,13 +74,11 @@ ${orderDetails}
 `;
 
   const encodedMessage = encodeURIComponent(message);
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
   const companyPhone = "905348228865"; // رقم الشركة
 
-  const whatsappUrl = isMobile
-    ? `whatsapp://send?phone=${companyPhone}&text=${encodedMessage}`
-    : `https://web.whatsapp.com/send?phone=${companyPhone}&text=${encodedMessage}`;
+  // استخدام الرابط الموحد
+  const whatsappUrl = `whatsapp://send?phone=${companyPhone}&text=${encodedMessage}`;
 
-  window.open(whatsappUrl, "_blank");
+  // فتح تطبيق واتساب
+  window.location.href = whatsappUrl;
 };

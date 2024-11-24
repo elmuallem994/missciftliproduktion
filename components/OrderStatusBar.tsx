@@ -53,7 +53,7 @@ const OrderStatusBar: React.FC = () => {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 flex flex-col items-center md:items-start gap-4 z-50">
+    <div className="fixed bottom-4 left-4 right-4 flex flex-col items-center md:items-start gap-4 ">
       {orders.map((order) => {
         const currentStatusIndex = statuses.indexOf(order.status || "");
         const progressPercentage =
@@ -67,42 +67,49 @@ const OrderStatusBar: React.FC = () => {
             className="relative cursor-pointer transition-transform hover:scale-105"
             onClick={() => router.push(`/order-details/${order.id}`)}
           >
-            {/* تصميم الدائرة للشاشات الصغيرة */}
-            <div className=" md:hidden bg-white w-24 h-24 rounded-full shadow-lg border border-gray-200 flex justify-center items-center">
-              <svg
-                className="absolute inset-0 w-full h-full"
-                viewBox="0 0 36 36"
-              >
-                <path
-                  className="text-gray-300"
-                  d="M18 2.0845
-                  a 15.9155 15.9155 0 0 1 0 31.831
-                  a 15.9155 15.9155 0 0 1 0 -31.831"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-                <path
-                  className="text-orange-500"
-                  d="M18 2.0845
-                  a 15.9155 15.9155 0 0 1 0 31.831
-                  a 15.9155 15.9155 0 0 1 0 -31.831"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeDasharray={`${progressPercentage}, 100`}
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className="flex flex-col items-center text-center z-10">
-                <span className="px-1  text-xs rounded-full bg-blue-200 text-blue-800 font-semibold">
-                  #{order.id.replace(/\D/g, "").slice(-4)}
-                </span>
-                <span className="text-[12px] text-orange-500 font-semibold pt-1">
-                  {order.status === "hazırlanıyor"
-                    ? "Hazırlanıyor"
-                    : order.status}
-                </span>
+            {/* تصميم المستطيل ليكون في أقصى اليسار على شاشات الجوال */}
+            <div className="md:hidden absolute right-12 bottom-4 flex justify-start items-center">
+              <div className="bg-white w-36 h-16 rounded-md shadow-lg border border-gray-200 flex justify-between items-center px-4">
+                <div className="flex flex-col items-start">
+                  <span className="px-2 py-1 text-xs rounded-full bg-blue-200 text-blue-800 font-semibold mb-1">
+                    #{order.id.replace(/\D/g, "").slice(-4)}
+                  </span>
+                  <span className="text-sm text-orange-500 font-semibold">
+                    {order.status === "hazırlanıyor"
+                      ? "Hazırlanıyor"
+                      : order.status}
+                  </span>
+                </div>
+                <div className="relative w-10 h-10 flex justify-center items-center">
+                  <svg
+                    className="absolute inset-0 w-full h-full"
+                    viewBox="0 0 36 36"
+                  >
+                    <path
+                      className="text-gray-300"
+                      d="M18 2.0845
+            a 15.9155 15.9155 0 0 1 0 31.831
+            a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <path
+                      className="text-orange-500"
+                      d="M18 2.0845
+            a 15.9155 15.9155 0 0 1 0 31.831
+            a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeDasharray={`${progressPercentage}, 100`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute text-xs text-gray-500 font-semibold">
+                    %{Math.round(progressPercentage)}
+                  </span>
+                </div>
               </div>
             </div>
 

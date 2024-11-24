@@ -21,8 +21,9 @@ import { Pencil } from "lucide-react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { Button } from "../components/ui/button";
-import { FaTrash } from "react-icons/fa";
+
 import { sendOrderToWhatsApp } from "@/utils/sendToWhatsApp";
+import Price from "../components/Price";
 
 const CartPage = () => {
   const [recipientName, setRecipientName] = useState<string>("");
@@ -30,6 +31,8 @@ const CartPage = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [deliveryDays, setDeliveryDays] = useState<number[]>([]);
+  const [neighborhoodName, setNeighborhoodName] = useState<string | null>(null);
+
   const [deliveryDates, setDeliveryDates] = useState<Date[]>([]);
   const [regionName, setRegionName] = useState<string | null>(null);
   const [startTime, setStartTime] = useState<string | null>(null);
@@ -38,7 +41,7 @@ const CartPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { products, totalItems, totalPrice, removeFromCart } = useCartStore();
+  const { products, totalItems, totalPrice } = useCartStore();
 
   const addOrderId = useOrderStore((state) => state.addOrderId);
 
@@ -95,15 +98,19 @@ const CartPage = () => {
 
         const regionData = await fetchRegionId();
 
-        if (!regionData || !regionData.regionId) {
+        if (!regionData) {
           throw new Error("Bölge kimliği eksik.");
         }
 
-        const regionId = regionData.regionId;
-        const startTime = regionData.startTime;
-        const endTime = regionData.endTime;
-        const regionName = regionData.regionName;
-        const neighborhoods = regionData.neighborhoods;
+        // استخراج الحقول من regionData
+        const {
+          regionId,
+          startTime,
+          endTime,
+          regionName,
+          neighborhoodName,
+          fullAddress, // لا حاجة لـ deliveryDays
+        } = regionData;
 
         const addressResponse = await fetch(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/address/${user?.id}`
@@ -148,7 +155,7 @@ const CartPage = () => {
                 endTime: endTime,
                 fullAddress: fullAddress,
                 regionName: regionName,
-                neighborhoods: neighborhoods,
+                neighborhoodName: neighborhoodName, // إضافة اسم الحي
               },
             }),
           }
@@ -168,7 +175,7 @@ const CartPage = () => {
             totalPrice,
             selectedDay,
             regionName,
-            neighborhoods,
+            neighborhoodName,
             startTime,
             endTime,
             orderDate, // تاريخ الطلب
@@ -195,37 +202,59 @@ const CartPage = () => {
     try {
       setLoading(true);
 
+      // جلب بيانات العنوان
       const addressResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/address/${user?.id}`
       );
+
       if (!addressResponse.ok) {
         throw new Error("Kullanıcı adresi alınamadı");
       }
 
       const addressData = await addressResponse.json();
-      console.log("Address Data:", addressData);
+      console.log("Address Data:", addressData); // إضافة تسجيل البيانات
 
       if (!addressData.regionId) {
-        throw new Error(
-          "Kullanıcının adresine ilişkin alan tanımlayıcı bulunamadı"
-        );
+        throw new Error("Adres bilgisi eksik");
       }
 
+      // جلب بيانات المنطقة مع الأحياء
+      const regionResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/regions/${addressData.regionId}`
+      );
+
+      if (!regionResponse.ok) {
+        throw new Error("Bölge bilgisi alınamadı");
+      }
+
+      const regionData = await regionResponse.json();
+      console.log("Region Data:", regionData); // إضافة تسجيل البيانات
+
+      // افتراض وجود حي واحد مرتبط بالعنوان
+      const currentNeighborhood = regionData.neighborhoods.find(
+        (n) => n.id === addressData.neighborhoodId
+      );
+      console.log(deliveryDays);
+
+      setRegionName(regionData.name); // اسم المنطقة
+      setNeighborhoodName(currentNeighborhood?.name || ""); // اسم الحي
+      setStartTime(currentNeighborhood?.startTime || ""); // وقت البدء
+      setEndTime(currentNeighborhood?.endTime || ""); // وقت النهاية
+      setFullAddress(`${addressData.il}, ${addressData.adres}`); // العنوان الكامل
+      setDeliveryDays(currentNeighborhood?.deliveryDays || []); // الأيام المتاحة للتسليم
+
       return {
+        regionId: addressData.regionId, // إضافة regionId هنا
         fullAddress: `${addressData.il}, ${addressData.adres}`,
-        regionId: addressData.regionId,
-        startTime: addressData.startTime,
-        endTime: addressData.endTime,
-        regionName: addressData.regionName,
-        neighborhoods: addressData.neighborhoods,
+        regionName: regionData.name,
+        neighborhoodName: currentNeighborhood?.name,
+        startTime: currentNeighborhood?.startTime,
+        endTime: currentNeighborhood?.endTime,
+        deliveryDays: currentNeighborhood?.deliveryDays, // إرسال الأيام المتاحة
       };
     } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError("Bir hata oluştu");
-      }
+      console.error("Error fetching region and address data:", error);
+      setError("Bir hata oluştu");
       return null;
     } finally {
       setLoading(false);
@@ -243,41 +272,43 @@ const CartPage = () => {
 
     try {
       setLoading(true);
-      setError(null);
 
       const addressData = await fetchRegionId();
       if (!addressData) {
-        setMessage("Devam etmek için lütfen bir adres ekleyin.");
+        setMessage("Adres bilgisi eksik. Lütfen adres ekleyin.");
+        // إذا لم يتم العثور على العنوان، تحويل المستخدم إلى صفحة العنوان
         setTimeout(() => {
           router.push("/address");
-        }, 1000);
+        }, 800);
+
         return;
       }
 
-      const { fullAddress, regionId } = addressData;
+      const {
+        fullAddress,
+        regionName,
+        neighborhoodName,
+        startTime,
+        endTime,
+        deliveryDays, // إضافة `deliveryDays` من البيانات المسترجعة
+      } = addressData;
+
       setFullAddress(fullAddress);
+      setRegionName(regionName);
+      setNeighborhoodName(neighborhoodName);
+      setStartTime(startTime);
+      setEndTime(endTime);
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/regions/${regionId}`
-      );
-      if (!response.ok) {
-        throw new Error("Teslimat günleri getirilemedi");
+      if (deliveryDays && deliveryDays.length > 0) {
+        // استدعاء الدالة لحساب التواريخ
+        const calculatedDates = calculateDeliveryDates(deliveryDays);
+        setDeliveryDates(calculatedDates); // تخزين النتائج في `deliveryDates`
+      } else {
+        setDeliveryDates([]); // إذا لم تكن هناك أيام متاحة، يتم تعيينها كقائمة فارغة
       }
-
-      const data = await response.json();
-
-      const calculatedDates = calculateDeliveryDates(data.deliveryDays);
-
-      console.log(deliveryDays);
-
-      setDeliveryDates(calculatedDates);
-      setDeliveryDays(data.deliveryDays);
-      setRegionName(data.regionName);
-      setStartTime(data.startTime);
-      setEndTime(data.endTime);
     } catch (error) {
       console.log(error);
-      setError("Teslimat günleri alınırken bir hata oluştu");
+      setError("Bir hata oluştu");
     } finally {
       setLoading(false);
     }
@@ -318,32 +349,19 @@ const CartPage = () => {
               <p className="text-gray-200 text-[13px] md:text-sm max-w-[150px]  md:max-w-60">
                 {item.desc}
               </p>
-              <div className="flex items-center space-x-2">
-                <span className="bg-orange-600 text-white rounded-full px-2 py-1 text-xs font-bold">
-                  Adet : {item.quantity}
-                </span>
-                <span className="text-sm text-gray-400">
-                  {item.optionTitle}
-                </span>
-              </div>
+              <p className="text-lg font-semibold text-orange-300">
+                {item.price} TL
+              </p>
             </div>
             <div className="flex items-center space-x-4">
-              <h2 className="text-lg font-semibold text-orange-300">
-                {item.price} TL
-              </h2>
-              <span
-                className="cursor-pointer text-red-500 hover:text-red-700"
-                onClick={() => removeFromCart(item)}
-              >
-                <FaTrash size={20} /> {/* أيقونة سلة الحذف */}
-              </span>
+              <Price product={item} />
             </div>
           </div>
         ))}
       </div>
 
       {/* قسم ملخص السلة */}
-      <div className="w-full lg:w-1/3 p-6 bg-gray-800 flex flex-col gap-6 shadow-md mt-4 md:mt-0 lg:ml-4">
+      <div className="w-full lg:w-1/3 p-6 bg-gray-800 flex flex-col gap-6 shadow-md mt-4 md:mt-0 lg:ml-4 text-xl">
         <div className="text-2xl font-semibold text-orange-400 mb-4">
           Sipariş Özeti
         </div>
@@ -357,7 +375,7 @@ const CartPage = () => {
 
         <div className="flex justify-between items-center border-b border-gray-700 pb-4 text-gray-200">
           <span>Teslimat Ücreti</span>
-          <span className="text-green-500 font-semibold">Ücretsiz</span>
+          <span className="text-green-500 font-semibold text-xl">Ücretsiz</span>
         </div>
 
         <div className="flex justify-between items-center text-xl font-bold text-gray-200">
@@ -392,12 +410,17 @@ const CartPage = () => {
               <AlertDialogDescription className="space-y-4 mt-4">
                 {regionName && (
                   <p className="text-xl font-semibold text-red-400">
-                    Bölge : {regionName}
+                    Bölge: {regionName}
+                  </p>
+                )}
+                {neighborhoodName && (
+                  <p className="text-xl font-semibold text-blue-400">
+                    Mahalle: {neighborhoodName}
                   </p>
                 )}
                 {startTime && endTime && (
                   <p className="text-sm text-green-600 font-bold">
-                    Teslimat süresi : {startTime} arası {endTime}
+                    Teslimat Süresi: {startTime} - {endTime}
                   </p>
                 )}
                 {fullAddress ? (

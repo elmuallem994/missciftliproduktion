@@ -70,27 +70,31 @@ const Price = ({ product }: { product: ProductType }) => {
         <div className="flex items-center gap-1 md:gap-2">
           <Button
             variant="destructive"
-            className="bg-orange-400 hover:bg-orange-500 p-2  rounded-md"
+            className="bg-orange-400 font-bold hover:bg-orange-500 p-2  rounded-md"
             size="sm"
             onClick={handleDecrease}
           >
             <span className="text-lg md:text-2xl">
-              {quantity === 1 ? <Trash2 size={16} className="text-lg" /> : "-"}
+              {quantity === 1 ? (
+                <Trash2 size={16} className="text-lg font-bold" />
+              ) : (
+                "-"
+              )}
             </span>
           </Button>
           <Input
             value={quantity}
             readOnly
-            className="w-8 md:w-10 text-center text-white text-sm md:text-lg bg-orange-400"
+            className=" w-10 text-center text-white text-sm md:text-lg bg-orange-400 font-bold"
             aria-label="Current quantity"
           />
           <Button
             variant="destructive"
-            className="bg-orange-400 hover:bg-orange-500 p-2  rounded-md"
+            className="bg-orange-400 font-bold hover:bg-orange-500 p-2  rounded-md"
             size="sm"
             onClick={handleIncrease}
           >
-            <span className="text-lg md:text-2xl">+</span>
+            <span className="text-lg md:text-2xl font-bold">+</span>
           </Button>
         </div>
       ) : (
