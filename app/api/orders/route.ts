@@ -24,7 +24,7 @@ export const GET = async () => {
   }
 
   try {
-    const user = await clerkClient.users.getUser(userId);
+    const user = await clerkClient().users.getUser(userId);
 
     if (user.publicMetadata.role === "admin") {
       // جلب جميع الطلبات مع معلومات المستخدم والعناوين والعناصر المرتبطة
