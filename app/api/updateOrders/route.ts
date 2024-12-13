@@ -1,25 +1,36 @@
 import prisma from "@/utils/connect";
 import { NextResponse } from "next/server";
 
+// وظيفة للحصول على التاريخ بالتنسيق المطلوب
+const formatDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // إضافة صفر إذا كان الشهر أقل من 10
+  const day = String(date.getDate()).padStart(2, "0"); // إضافة صفر إذا كان اليوم أقل من 10
+  return `${year}-${month}-${day}`;
+};
+
 // تحديث الطلبات (POST)
 export const POST = async () => {
   try {
-    // احصل على تاريخ اليوم بدون الوقت
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // إزالة الوقت للتأكد من مقارنة التاريخ فقط
+    // ضبط الوقت وفقًا لمنطقة تركيا الزمنية
+    const today = new Date(
+      new Date().toLocaleString("en-US", { timeZone: "Europe/Istanbul" })
+    );
+    today.setHours(0, 0, 0, 0); // إزالة الوقت
 
-    const formattedToday = today.toISOString().split("T")[0];
+    // تنسيق التاريخ باستخدام الدالة المخصصة
+    const formattedToday = formatDate(today);
 
     // تحديث الطلبات التي تحتوي على تاريخ اليوم
     const updatedOrders = await prisma.order.updateMany({
       where: {
         deliveryDate: {
-          contains: formattedToday,
+          contains: formattedToday, // البحث عن الطلبات التي تحتوي على التاريخ
         },
-        status: "Alındı",
+        status: "Alındı", // الطلبات بحالة "Alındı"
       },
       data: {
-        status: "teslim edildi",
+        status: "teslim edildi", // تحديث الحالة إلى "teslim edildi"
       },
     });
 
@@ -40,17 +51,20 @@ export const POST = async () => {
 // جلب الطلبات (GET)
 export const GET = async () => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const formattedToday = today.toISOString().split("T")[0];
+    const today = new Date(
+      new Date().toLocaleString("en-US", { timeZone: "Europe/Istanbul" })
+    );
+    today.setHours(0, 0, 0, 0); // إزالة الوقت
 
-    // جلب الطلبات التي تم تحديث حالتها اليوم
+    const formattedToday = formatDate(today);
+
+    // جلب الطلبات التي تحتوي على تاريخ اليوم
     const orders = await prisma.order.findMany({
       where: {
         deliveryDate: {
-          contains: formattedToday,
+          contains: formattedToday, // التحقق من أن تاريخ اليوم موجود
         },
-        status: "teslim edildi",
+        status: "teslim edildi", // الحالة "تم التسليم"
       },
     });
 

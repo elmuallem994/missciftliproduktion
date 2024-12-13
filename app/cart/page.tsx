@@ -41,6 +41,7 @@ const CartPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const { products, totalItems, totalPrice } = useCartStore();
 
   const addOrderId = useOrderStore((state) => state.addOrderId);
@@ -559,28 +560,12 @@ const CartPage = () => {
             <div className="flex  justify-end gap-2 mt-4">
               <AlertDialogCancel>iptal</AlertDialogCancel>
               <Button
-                onClick={async () => {
-                  // تحقق من تعبئة الحقول
+                onClick={() => {
                   if (!selectedDay || !recipientName || !recipientPhone) {
                     setErrorMessage("Lütfen tüm zorunlu alanları doldurun.");
-                    return; // لا تغلق النافذة إذا كانت الحقول غير مكتملة
+                    return;
                   }
-
-                  setErrorMessage(""); // مسح رسالة الخطأ
-
-                  // تعطيل الزر أثناء الإرسال
-                  setIsSubmitting(true);
-
-                  try {
-                    const orderId = await handleCheckout(); // تنفيذ عملية الدفع والحصول على orderId
-
-                    if (orderId) {
-                      router.push(`/order-details/${orderId}`); // توجيه المستخدم إلى صفحة تفاصيل الطلب باستخدام orderId
-                    }
-                  } catch (error) {
-                    console.error("Error during checkout:", error);
-                    setIsSubmitting(false); // في حال حدوث خطأ، إعادة تمكين الزر
-                  }
+                  setShowConfirmation(true); // إظهار نافذة التأكيد
                 }}
                 className={`bg-orange-500 text-white p-2 rounded-md mt-2 md:mt-0 ${
                   !selectedDay || isSubmitting
@@ -591,6 +576,53 @@ const CartPage = () => {
               >
                 {isSubmitting ? "İşleniyor..." : "Sipariş Onayla"}
               </Button>
+
+              {showConfirmation && (
+                <AlertDialog
+                  open={showConfirmation}
+                  onOpenChange={setShowConfirmation}
+                >
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-lg font-bold">
+                        Siparişinizi onaylamak istiyor musunuz?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Siparişinizi göndermeden önce kontrol edin. Devam etmek
+                        istiyor musunuz?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="flex justify-end gap-4">
+                      <Button
+                        onClick={() => setShowConfirmation(false)}
+                        className="bg-gray-300 text-gray-700"
+                      >
+                        İptal
+                      </Button>
+                      <Button
+                        onClick={async () => {
+                          setShowConfirmation(false);
+                          setIsSubmitting(true); // تعطيل الزر أثناء الإرسال
+
+                          try {
+                            const orderId = await handleCheckout(); // تنفيذ الطلب
+
+                            if (orderId) {
+                              router.push(`/order-details/${orderId}`); // توجيه المستخدم إلى صفحة تفاصيل الطلب
+                            }
+                          } catch (error) {
+                            console.error("Error during checkout:", error);
+                            setIsSubmitting(false); // في حال حدوث خطأ، إعادة تمكين الزر
+                          }
+                        }}
+                        className="bg-orange-500 text-white"
+                      >
+                        Onayla
+                      </Button>
+                    </div>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
           </AlertDialogContent>
         </AlertDialog>

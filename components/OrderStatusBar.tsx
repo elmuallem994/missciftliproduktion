@@ -1,60 +1,51 @@
-// OrderStatusBar.tsx
-
 "use client";
 
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { OrderType } from "@/app/types/types";
 import { useOrderStore } from "@/utils/store";
 
-const OrderStatusBar: React.FC = () => {
-  const { orderIds, removeOrderId } = useOrderStore(); // احصل على قائمة الطلبات ودالة الإزالة
-  const [orders, setOrders] = useState<OrderType[]>([]);
+const fetchOrder = async (orderId: string) => {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/orders/${orderId}`
+  );
+  if (!response.ok) {
+    throw new Error("Order not found");
+  }
+  return response.json();
+};
 
+const OrderStatusBar: React.FC = () => {
+  const { orderIds, removeOrderId } = useOrderStore();
   const router = useRouter();
   const pathname = usePathname();
 
-  // حالات الطلب ونماذج الحالات
-  const statuses = ["Alındı", "hazırlanıyor", "Yolda", "teslim edildi"];
+  const { data: orders = [] } = useQuery({
+    queryKey: ["orders", orderIds], // مفتاح الاستعلام
+    queryFn: async () => {
+      const results = await Promise.all(
+        orderIds.map((id) =>
+          fetchOrder(id).catch(() => {
+            removeOrderId(id); // إزالة الطلب إذا لم يتم العثور عليه
+            return null;
+          })
+        )
+      );
+      return results.filter(Boolean); // استبعاد الطلبات التي لم يتم العثور عليها
+    },
+    refetchInterval: 10000, // إعادة الجلب كل 10 ثوانٍ
+    staleTime: 10000, // استخدام البيانات المؤقتة
+  });
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      const fetchedOrders: OrderType[] = [];
-
-      for (const orderId of orderIds) {
-        try {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/orders/${orderId}`
-          );
-          if (response.ok) {
-            const data = await response.json();
-            fetchedOrders.push(data);
-          } else if (response.status === 404) {
-            console.warn("Order not found, removing from order list.");
-            removeOrderId(orderId);
-          }
-        } catch (error) {
-          console.error("Error fetching order status:", error);
-        }
-      }
-
-      setOrders(fetchedOrders);
-    };
-
-    fetchOrders();
-
-    const interval = setInterval(fetchOrders, 5000); // تحديث الطلبات كل 5 ثوانٍ
-    return () => clearInterval(interval);
-  }, [orderIds, removeOrderId]);
-
-  // إخفاء جميع البطاقات إذا كانت الصفحة الحالية هي صفحة تفاصيل الطلب
   if (pathname.includes("/order-details/")) {
     return null;
   }
 
+  const statuses = ["Alındı", "hazırlanıyor", "Yolda", "teslim edildi"];
+
   return (
-    <div className="fixed bottom-4 left-4 right-4 flex flex-col items-center md:items-start gap-4 ">
-      {orders.map((order) => {
+    <div className="fixed bottom-4 left-4 right-4 flex flex-col items-center md:items-start gap-4">
+      {orders.map((order: OrderType) => {
         const currentStatusIndex = statuses.indexOf(order.status || "");
         const progressPercentage =
           ((currentStatusIndex + 1) / statuses.length) * 100;

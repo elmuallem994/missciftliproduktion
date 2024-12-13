@@ -12,7 +12,7 @@ const Footer = () => {
   }
 
   return (
-    <footer className="bg-gray-900 text-gray-300 py-8 px-4 mt-auto">
+    <footer className="bg-gray-900 text-gray-300 pb-8 px-4 ">
       {/* خط علوي */}
       <div className="w-[85%] h-[1px] bg-gray-500 mx-auto mb-10" />
 
