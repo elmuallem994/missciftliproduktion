@@ -7,7 +7,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: mysql://missciftlikuser:0Epf2VQo14zTqDgmmAT4@46.202.128.26:3306/missciftDatabase
+      DATABASE_URL: mysql://missciftlikuser:0Epf2VQo14zTqDgmmAT4@46.202.128.26:3306/missciftDatabase?sslmode=disabled
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_live_Y2xlcmsubWlzc2NpZnRsaWsuY29tJA
       CLERK_SECRET_KEY: sk_live_pbaETjp8KkP3xmII68XagH9CAcxMeQ2rxUEgJBhSS9
       NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
