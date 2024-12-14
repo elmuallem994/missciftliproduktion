@@ -1,8 +1,8 @@
 # استخدم Node 20 على أساس Alpine Linux
 FROM node:20-alpine
 
-# تثبيت MySQL Client
-RUN apk add --no-cache mysql-client
+# تثبيت MySQL Client و OpenSSL
+RUN apk add --no-cache mysql-client openssl
 
 # تعيين مجلد العمل
 WORKDIR /app
