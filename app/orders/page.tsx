@@ -112,16 +112,16 @@ const OrdersPage = () => {
               <thead className="bg-orange-400 text-white  ">
                 <tr>
                   <th className="px-6 py-3 border-b font-bold text-base md:text-xl text-center ">
-                    رقم الطلب
+                    sipariş numarası
                   </th>
                   <th className="px-6 py-3 border-b font-bold text-base md:text-xl text-center">
-                    تاريخ الطلب
+                    Sipariş tarihi
                   </th>
                   <th className="px-6 py-3 border-b  font-bold text-base md:text-xl text-center">
-                    معلومات المستلم
+                    Alıcı bilgileri
                   </th>
                   <th className="px-8 py-3 border-b font-bold text-base md:text-xl text-right ">
-                    الإجراءات
+                    prosedürler
                   </th>
                 </tr>
               </thead>

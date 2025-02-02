@@ -32,10 +32,10 @@ type CategoryData = {
 const categorySchema = z.object({
   title: z
     .string()
-    .min(3, { message: "العنوان مطلوب (يجب أن يكون 3 أحرف على الأقل)" }),
+    .min(3, { message: "Başlık gereklidir (en az 3 karakter olmalıdır)" }),
   desc: z
     .string()
-    .min(5, { message: "الوصف مطلوب (يجب أن يكون 5 أحرف على الأقل)" }),
+    .min(5, { message: "Açıklama gerekli (en az 5 karakter olmalıdır)" }),
 
   slug: z.string().min(3, { message: "الـ Slug مطلوب" }),
 });
@@ -113,7 +113,9 @@ const AddCategoryForm = ({ categoryData }: { categoryData?: CategoryData }) => {
 
       if (res.ok) {
         toast.success(
-          categoryData ? "تم تعديل الصنف بنجاح!" : "تم إضافة الصنف بنجاح!"
+          categoryData
+            ? "Öğe başarıyla değiştirildi!"
+            : "Öğe başarıyla eklendi!"
         );
         router.push("/menu");
       } else {
@@ -131,7 +133,7 @@ const AddCategoryForm = ({ categoryData }: { categoryData?: CategoryData }) => {
     <div className="main-content p-4 md:p-8 max-w-lg md:max-w-xl lg:max-w-3xl mx-auto">
       <div className="bg-white p-4 md:p-8 rounded-lg shadow-lg w-full">
         <h2 className="text-2xl font-bold mb-4 text-center">
-          {categoryData ? "تعديل الصنف" : "إضافة صنف جديد"}
+          {categoryData ? "Kategoriyi Düzenle" : "Yeni bir kategori ekle"}
         </h2>
         <Separator className="mb-4" />
         <Form {...form}>
@@ -142,7 +144,7 @@ const AddCategoryForm = ({ categoryData }: { categoryData?: CategoryData }) => {
                 htmlFor="file"
               >
                 <Image src="/upload.png" alt="" width={30} height={20} />
-                <span>تحميل الصورة</span>
+                <span>Resmi indirin</span>
               </label>
               <input
                 type="file"
@@ -168,10 +170,10 @@ const AddCategoryForm = ({ categoryData }: { categoryData?: CategoryData }) => {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>العنوان</FormLabel>
+                  <FormLabel>Başlık</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="أدخل العنوان"
+                      placeholder="Adresi girin"
                       disabled={isLoading}
                       {...field}
                       className="w-full"
@@ -186,10 +188,10 @@ const AddCategoryForm = ({ categoryData }: { categoryData?: CategoryData }) => {
               name="desc"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>الوصف</FormLabel>
+                  <FormLabel>Açıklama</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="أدخل الوصف"
+                      placeholder="Açıklamayı girin"
                       disabled={isLoading}
                       {...field}
                       className="w-full"
@@ -223,7 +225,7 @@ const AddCategoryForm = ({ categoryData }: { categoryData?: CategoryData }) => {
               disabled={isLoading}
               className="w-full py-3 md:py-2"
             >
-              {categoryData ? "حفظ التعديلات" : "إضافة الصنف"}
+              {categoryData ? "Değişiklikleri kaydet" : "Kategori ekle"}
             </Button>
           </form>
         </Form>

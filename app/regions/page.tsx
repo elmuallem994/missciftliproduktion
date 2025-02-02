@@ -24,13 +24,13 @@ type NeighborhoodType = {
 
 const dayNamesMap: { [key: string]: { [key: number]: string } } = {
   ar: {
-    1: "الإثنين",
-    2: "الثلاثاء",
-    3: "الأربعاء",
-    4: "الخميس",
-    5: "الجمعة",
-    6: "السبت",
-    0: "الأحد",
+    1: "Pazartesi",
+    2: "Salı",
+    3: "Çarşamba",
+    4: "Perşembe",
+    5: "Cuma",
+    6: "Cumartesi",
+    0: "Pazar",
   },
 };
 
@@ -79,7 +79,7 @@ const ManageLocations = () => {
   // Add a new region
   const handleAddRegion = async () => {
     if (!regionName) {
-      toast.error("يرجى إدخال اسم المنطقة");
+      toast.error("Lütfen bölgenin adını giriniz");
       return;
     }
 
@@ -99,9 +99,9 @@ const ManageLocations = () => {
       const savedRegion = await response.json();
       setRegions((prevRegions) => [...prevRegions, savedRegion]);
       setRegionName("");
-      toast.success("تمت إضافة المنطقة بنجاح");
+      toast.success("Bölge başarıyla eklendi");
     } catch {
-      toast.error("فشل في إضافة المنطقة");
+      toast.error("Bölge eklenemedi");
     } finally {
       setLoading(false);
     }
@@ -116,7 +116,7 @@ const ManageLocations = () => {
       !startTime ||
       !endTime
     ) {
-      toast.error("يرجى ملء جميع الحقول لإضافة حي");
+      toast.error("Mahalle eklemek için lütfen tüm alanları doldurun");
       return;
     }
 
@@ -147,9 +147,9 @@ const ManageLocations = () => {
       setSelectedDays([]);
       setStartTime("");
       setEndTime("");
-      toast.success("تمت إضافة الحي بنجاح");
+      toast.success("Mahalle başarıyla eklendi");
     } catch {
-      toast.error("فشل في إضافة الحي");
+      toast.error("Mahalle eklenemedi");
     } finally {
       setLoading(false);
     }
@@ -169,9 +169,9 @@ const ManageLocations = () => {
 
       await fetchRegions();
 
-      toast.success("تم حذف الحي بنجاح");
+      toast.success("Mahalle başarıyla silindi");
     } catch {
-      toast.error("فشل في حذف الحي");
+      toast.error("Mahalle silinemedi");
     } finally {
       setLoading(false);
     }
@@ -191,9 +191,9 @@ const ManageLocations = () => {
 
       await fetchRegions(); // تحديث قائمة المناطق بعد الحذف
 
-      toast.success("تم حذف المنطقة بنجاح");
+      toast.success("Bölge başarıyla silindi");
     } catch (error) {
-      toast.error("فشل في حذف المنطقة");
+      toast.error("Bölge silinemedi");
       console.error("Error deleting region:", error);
     } finally {
       setLoading(false);
@@ -222,9 +222,9 @@ const ManageLocations = () => {
       await fetchRegions();
       setEditingRegion(null);
       setRegionName("");
-      toast.success("تم تعديل المنطقة بنجاح");
+      toast.success("Bölge başarıyla değiştirildi");
     } catch {
-      toast.error("فشل تعديل المنطقة");
+      toast.error("Bölge değiştirilemedi");
     } finally {
       setLoading(false);
     }
@@ -262,7 +262,7 @@ const ManageLocations = () => {
       setEndTime("");
       toast.success("تم تعديل الحي بنجاح");
     } catch {
-      toast.error("فشل تعديل الحي");
+      toast.error("Mahalle değişikliği başarısız oldu");
     } finally {
       setLoading(false);
     }
@@ -271,14 +271,14 @@ const ManageLocations = () => {
   return (
     <div className="main-content w-full p-4 sm:p-6 md:p-8 lg:p-10">
       <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-lg shadow-md max-w-full lg:max-w-5xl mx-auto">
-        <h1 className="text-2xl font-bold text-orange-500">إدارة المناطق</h1>
+        <h1 className="text-2xl font-bold text-orange-500">Bölgesel yönetim</h1>
         <Separator className="my-4" />
 
         {/* Add Region Section */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2">إضافة منطقة جديدة</h2>
+          <h2 className="text-lg font-semibold mb-2">Yeni bir bölge ekle</h2>
           <Input
-            placeholder="اسم المنطقة"
+            placeholder="bölge adı"
             value={regionName}
             onChange={(e) => setRegionName(e.target.value)}
             className="mb-4"
@@ -286,7 +286,7 @@ const ManageLocations = () => {
           <Button
             onClick={editingRegion ? handleUpdateRegion : handleAddRegion}
           >
-            {editingRegion ? "تعديل" : "إضافة"}
+            {editingRegion ? "değişiklik" : "ekle"}
           </Button>
         </div>
 
@@ -295,14 +295,16 @@ const ManageLocations = () => {
         {/* Add Neighborhood Section */}
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-2">
-            {editingNeighborhood ? "تعديل الحي" : "إضافة حي جديد"}
+            {editingNeighborhood
+              ? "Mahalle değişikliği"
+              : "Yeni bir mahalle ekle"}
           </h2>
           <select
             onChange={(e) => setSelectedRegionId(Number(e.target.value))}
             value={selectedRegionId || ""}
             className="mb-4 w-full border border-gray-300 rounded-md p-2"
           >
-            <option value="">اختر منطقة</option>
+            <option value="">Bir bölge seçin</option>
             {regions.map((region) => (
               <option key={region.id} value={region.id}>
                 {region.name}
@@ -310,7 +312,7 @@ const ManageLocations = () => {
             ))}
           </select>
           <Input
-            placeholder="اسم الحي"
+            placeholder="mahalle adı"
             value={neighborhoodName}
             onChange={(e) => setNeighborhoodName(e.target.value)}
             className="mb-4"
@@ -352,7 +354,7 @@ const ManageLocations = () => {
                 : handleAddNeighborhood
             }
           >
-            {editingNeighborhood ? "تعديل" : "إضافة"}
+            {editingNeighborhood ? "değişiklik" : "ekle"}
           </Button>
         </div>
 
@@ -360,7 +362,7 @@ const ManageLocations = () => {
 
         {/* Regions and Neighborhoods Table */}
         <div>
-          <h2 className="text-lg font-semibold mb-2">المناطق والأحياء</h2>
+          <h2 className="text-lg font-semibold mb-2">Bölgeler ve mahalleler</h2>
           {regions.map((region) => (
             <div key={region.id} className="mb-6">
               <h3 className="text-lg font-bold mb-2 text-orange-500">
@@ -388,11 +390,11 @@ const ManageLocations = () => {
                   <table className="w-full border-collapse border border-gray-200 text-xs sm:text-sm lg:text-base">
                     <thead>
                       <tr>
-                        <th className="border p-2">اسم الحي</th>
-                        <th className="border p-2">أيام التوصيل</th>
-                        <th className="border p-2">وقت البدء</th>
-                        <th className="border p-2">وقت النهاية</th>
-                        <th className="border p-2">الإجراءات</th>
+                        <th className="border p-2">Mahallenin adı</th>
+                        <th className="border p-2">Teslimat günleri</th>
+                        <th className="border p-2">Başlangıç ​​zamanı</th>
+                        <th className="border p-2">Bitiş zamanı</th>
+                        <th className="border p-2">Prosedürler</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -405,7 +407,7 @@ const ManageLocations = () => {
                               ? neighborhood.deliveryDays
                                   .map((day) => dayNamesMap["ar"][day])
                                   .join(", ")
-                              : "لا توجد أيام توصيل"}
+                              : "Teslimat günü yok"}
                           </td>
                           <td className="border p-2">
                             {neighborhood.startTime}
@@ -441,7 +443,7 @@ const ManageLocations = () => {
                   </table>
                 </div>
               ) : (
-                <p className="text-gray-500">لا توجد أحياء</p>
+                <p className="text-gray-500">Mahalle yok</p>
               )}
             </div>
           ))}

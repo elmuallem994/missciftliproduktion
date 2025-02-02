@@ -28,13 +28,19 @@ const Navbar = () => {
         <Link href="/" className="bg-orange-400 rounded-2xl py-1 px-3">
           Anasayfa
         </Link>
-        <Link href="/" className="bg-orange-400 rounded-2xl py-1 px-3">
+        <Link
+          href="/hakkimizda"
+          className="bg-orange-400 rounded-2xl py-1 px-3"
+        >
           Hakkımızda
         </Link>
         <Link href="/menu" className="bg-orange-400 rounded-2xl py-1 px-3">
           Ürünler
         </Link>
-        <Link href="/" className="bg-orange-400 rounded-2xl py-1 px-3">
+        <Link
+          href="/ciftligimiz"
+          className="bg-orange-400 rounded-2xl py-1 px-3"
+        >
           Çiftliğimiz
         </Link>
       </div>

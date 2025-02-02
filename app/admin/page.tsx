@@ -5,7 +5,7 @@ const AdminPage = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <h1 className="text-4xl   mb-32 glowing-text text-center text-white font-extralight ">
-        لوحة تحكم المشرف
+        Yönetici kontrol paneli
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
@@ -15,7 +15,7 @@ const AdminPage = () => {
             variant="secondary"
             className="w-full h-16 md:h-32 text-xl font-bold bg-green-500 text-white"
           >
-            إضافة صنف
+            Kategori ekle
           </Button>
         </Link>
 
@@ -25,7 +25,7 @@ const AdminPage = () => {
             variant="secondary"
             className="w-full h-16 md:h-32 text-xl font-bold bg-red-500 text-white"
           >
-            إضافة منتج
+            Ürün ekle
           </Button>
         </Link>
 
@@ -35,7 +35,7 @@ const AdminPage = () => {
             variant="secondary"
             className="w-full h-16 md:h-32 text-xl font-bold bg-green-500 text-white"
           >
-            إدارة المناطق
+            Alan yönetimi
           </Button>
         </Link>
 
@@ -45,7 +45,7 @@ const AdminPage = () => {
             variant="secondary"
             className="w-full h-16 md:h-32 text-xl font-bold bg-red-500 text-white"
           >
-            عرض الطلبات
+            Siparişleri görüntüle
           </Button>
         </Link>
       </div>

@@ -37,13 +37,13 @@ type ProductData = {
 };
 
 const productSchema = z.object({
-  title: z.string().min(3, { message: "العنوان مطلوب" }),
-  desc: z.string().min(5, { message: "الوصف مطلوب" }),
+  title: z.string().min(3, { message: "Adres gerekli" }),
+  desc: z.string().min(5, { message: "Açıklama gerekli" }),
   price: z.preprocess(
     (value) => parseFloat(z.string().parse(value)),
-    z.number().positive({ message: "يجب أن يكون السعر رقمًا موجبًا" })
+    z.number().positive({ message: "Fiyat pozitif bir sayı olmalıdır" })
   ),
-  catSlug: z.string().nonempty({ message: "يجب اختيار الفئة" }),
+  catSlug: z.string().nonempty({ message: "Bir kategori seçmelisiniz" }),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -155,7 +155,7 @@ const AddPage = ({ productData }: { productData?: ProductData }) => {
 
       if (res.ok) {
         toast.success(
-          productData ? "تم تحديث المنتج بنجاح" : "تمت إضافة المنتج بنجاح"
+          productData ? "Ürün başarıyla güncellendi" : "Ürün başarıyla eklendi"
         );
         router.push("/menu");
       } else {
@@ -178,7 +178,7 @@ const AddPage = ({ productData }: { productData?: ProductData }) => {
             className="space-y-4 w-full"
           >
             <h1 className="text-2xl md:text-3xl pb-7 text-orange-300 font-bold text-center">
-              {productData ? "تعديل المنتج" : "أضف منتج جديد"}
+              {productData ? "Ürünü Düzenle" : "Yeni ürün ekle"}
             </h1>
 
             <FormItem>
@@ -186,7 +186,7 @@ const AddPage = ({ productData }: { productData?: ProductData }) => {
                 htmlFor="file"
                 className="cursor-pointer text-red-500 border p-2"
               >
-                تحميل الصورة
+                Resmi indir
               </FormLabel>
 
               <input
@@ -206,7 +206,7 @@ const AddPage = ({ productData }: { productData?: ProductData }) => {
                   />
                 </div>
               ) : (
-                <p className="mt-2 text-red-500">لم يتم تحميل الصورة بعد.</p>
+                <p className="mt-2 text-red-500">Resim henüz yüklenmedi.</p>
               )}
             </FormItem>
 
@@ -215,10 +215,10 @@ const AddPage = ({ productData }: { productData?: ProductData }) => {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>العنوان</FormLabel>
+                  <FormLabel>Başlık</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="عنوان المنتج"
+                      placeholder="Ürün Başlığı"
                       {...field}
                       className="w-full"
                     />
@@ -233,10 +233,10 @@ const AddPage = ({ productData }: { productData?: ProductData }) => {
               name="desc"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>الوصف</FormLabel>
+                  <FormLabel>Açıklama</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="وصف المنتج"
+                      placeholder="Ürün Açıklaması"
                       {...field}
                       className="w-full"
                     />
@@ -251,10 +251,10 @@ const AddPage = ({ productData }: { productData?: ProductData }) => {
               name="price"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>السعر</FormLabel>
+                  <FormLabel>Fiyat</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="سعر المنتج"
+                      placeholder="Ürün fiyatı"
                       type="number"
                       {...field}
                       className="w-full"
@@ -270,14 +270,14 @@ const AddPage = ({ productData }: { productData?: ProductData }) => {
               name="catSlug"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>الصنف</FormLabel>
+                  <FormLabel>Kategori</FormLabel>
                   <FormControl>
                     <Select
                       onValueChange={(value) => field.onChange(value)}
                       defaultValue={field.value}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="حدد الفئة" />
+                        <SelectValue placeholder="Kategori seç" />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((category) => (
@@ -298,7 +298,7 @@ const AddPage = ({ productData }: { productData?: ProductData }) => {
               disabled={form.formState.isSubmitting}
               className="w-full"
             >
-              {productData ? "حفظ التغييرات" : "إرسال"}
+              {productData ? "Değişiklikleri kaydet" : "Göndermek"}
             </Button>
           </form>
         </Form>

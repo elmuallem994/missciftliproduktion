@@ -32,7 +32,7 @@ const Footer = () => {
           <ul className="flex items-center space-x-4 md:space-x-7 text-sm md:text-base">
             <li>
               <Link
-                href="/about"
+                href="/hakkimizda"
                 className="hover:text-orange-500 transition duration-300"
               >
                 Hakkımızda
@@ -40,7 +40,7 @@ const Footer = () => {
             </li>
             <li>
               <Link
-                href="/team"
+                href="/"
                 className="hover:text-orange-500 transition duration-300"
               >
                 Ekibimiz
@@ -48,7 +48,7 @@ const Footer = () => {
             </li>
             <li>
               <Link
-                href="/contact"
+                href="/"
                 className="hover:text-orange-500 transition duration-300"
               >
                 İletişim
@@ -65,7 +65,7 @@ const Footer = () => {
 
       {/* نص الحقوق */}
       <div className="text-center text-xs text-gray-500 pt-4">
-        © 2024 Miss çiftlik. Tüm hakları saklıdır.
+        © 2025 Miss çiftlik. Tüm hakları saklıdır.
       </div>
     </footer>
   );

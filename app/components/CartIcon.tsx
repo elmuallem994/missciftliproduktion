@@ -24,7 +24,7 @@ const CartIcon = () => {
             variant="secondary"
             className="  text-base rounded-full font-bold bg-red-600 text-white"
           >
-            المشرف
+            Yönetici
           </Button>
         </Link>
       ) : (

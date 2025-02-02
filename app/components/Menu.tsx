@@ -16,9 +16,9 @@ import { Separator } from "./ui/separator";
 
 const links = [
   { id: 1, title: "Anasayfa", url: "/" },
-  { id: 2, title: "Hakkımızda", url: "/" },
+  { id: 2, title: "Hakkımızda", url: "/hakkimizda" },
   { id: 3, title: "Ürünler", url: "/menu" },
-  { id: 4, title: "Çiftliğimiz", url: "/" },
+  { id: 4, title: "Çiftliğimiz", url: "/ciftligimiz" },
 ];
 
 const Menu = () => {
